@@ -73,7 +73,7 @@ hewan_langka = [
         "nama": "jalak bali", 
         "kategori": "Burung Khas / Bali", 
         "ikon": "🕊️🌺", 
-        "clues": ["✨ Clue 1: Burung pengicau berbulu putih bersih dengan bercak biru di mata.", " crest Clue 2: Memiliki jambul indah di bagian belakang kepalanya.", "🏝️ Clue 3: Merupakan maskot fauna resmi dari pulau Bali."],
+        "clues": ["✨ Clue 1: Burung pengicau berbulu putih bersih dengan bercak biru di mata.", "🌸 Clue 2: Memiliki jambul indah di bagian belakang kepalanya.", "🏝️ Clue 3: Merupakan maskot fauna resmi dari pulau Bali."],
         "fakta": "Jalak bali adalah salah satu burung paling dilindungi di dunia karena populasinya di alam liar yang sempat sangat kritis."
     }
 ]
@@ -89,25 +89,4 @@ if 'nama_pemain' not in st.session_state:
 # 3. Halaman Login
 if st.session_state.nama_pemain == "":
     st.title("🇮🇩 KUIS ENDEMIK FAUNA INDONESIA 🇮🇩")
-    st.write("Selamat datang di Ekspedisi Kekayaan Satwa Nusantara!")
-    st.info("💡 Tebak nama hewan endemik asli Indonesia, buka clue, dan jelajahi museum nusantaranya!")
-    
-    nama = st.text_input("Siapa nama panggilanmu, Explorer?")
-    if st.button("Mulai Ekspedisi Nusantara!", use_container_width=True):
-        if nama:
-            st.session_state.nama_pemain = nama
-            st.rerun()
-        else:
-            st.warning("Tulis namamu dulu ya!")
-
-# 4. Halaman Kuis Utama
-else:
-    # --- SIDEBAR (Panel Samping + Backsound) ---
-    with st.sidebar:
-        st.header(f"Halo, {st.session_state.nama_pemain}! 🇮🇩")
-        st.metric("Skor Saat Ini", f"{st.session_state.skor} Poin")
-        
-        st.write("Progres Ekspedisi:")
-        progress_bar = st.session_state.no_soal / len(hewan_langka)
-        st.progress(progress_bar)
-        st.
+    st.write("Selamat datang di Ek
