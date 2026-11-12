@@ -38,7 +38,7 @@ if st.session_state.nama_pemain == "":
         else:
             st.warning("Tulis namamu dulu ya!")
 else:
-    # Sidebar dengan Audio Format MP3 yang Stabil dan Langsung Muncul Durasi Menitnya
+    # Sidebar dengan Audio MP3 Online
     with st.sidebar:
         st.header(f"Explorer: {st.session_state.nama_pemain} 🇮🇩")
         st.metric("Skor Sementara", f"{st.session_state.skor} Poin")
@@ -98,7 +98,7 @@ else:
         st.header(f"Sidang Kelulusan: {st.session_state.nama_pemain}")
         st.metric("Total Nilai Akhir", f"{st.session_state.skor} / 100 Poin")
         
-        # Sistem Gelar Kustom Sesuai Permintaanmu
+        # Sistem Gelar Kustom
         if st.session_state.skor >= 90:
             st.markdown("🎓 **Gelar Kelulusan:** `S.Hwn` — **Predikat: Luar Biasa!** 🏆")
         elif st.session_state.skor >= 60:
@@ -113,5 +113,13 @@ else:
         st.write("Pelajari kembali fakta unik dari ke-10 hewan endemik:")
         
         for i, item in enumerate(daftar_hewan):
-            with st.expander(f"🇮🇩 {i
-                                 }
+            with st.expander(f"{i+1}. {item['nama'].capitalize()} ({item['kategori']})"):
+                st.markdown(f"### {item['ikon']}")
+                st.write(f"**Fakta Unik:** {item['fakta']}")
+                
+        st.divider()
+        if st.button("🔄 Ujian Ulang (Soal Diacak)", use_container_width=True):
+            st.session_state.skor = 0
+            st.session_state.no_soal = 0
+            st.session_state.soal_acak = random.sample(daftar_hewan, len(daftar_hewan))
+            st.rerun()
