@@ -114,3 +114,4 @@ else:
         
         for i, item in enumerate(daftar_hewan):
             with st.expander(f"🇮🇩 {i
+                                 }
