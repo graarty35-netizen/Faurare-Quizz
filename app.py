@@ -4,7 +4,7 @@ import random
 
 st.set_page_config(page_title="RareFauna Quiz Indonesia", page_icon="🇮🇩", layout="centered")
 
-# Database 10 Hewan Endemik Indonesia (Menggunakan Emoji yang Pasti Muncul & Aman)
+# Database 10 Hewan Endemik Indonesia
 daftar_hewan = [
     {"nama": "komodo", "kategori": "Reptil Purba / NTT", "ikon": "🦖🏝️", "clues": ["✨ Clue 1: Reptil terbesar di dunia.", "🇮🇩 Clue 2: Air liur beracun.", "🏝️ Clue 3: Endemik NTT."], "fakta": "Komodo adalah kadal terbesar di bumi yang panjangnya bisa mencapai 3 meter!"},
     {"nama": "orangutan", "kategori": "Primata / Sumatera & Kalimantan", "ikon": "🦧🌴", "clues": ["✨ Clue 1: Berarti 'manusia hutan'.", "🟠 Clue 2: Berbulu jingga.", "🌴 Clue 3: Hidup di atas pohon."], "fakta": "Orangutan sangat cerdas dan mampu menggunakan alat."},
@@ -38,7 +38,7 @@ if st.session_state.nama_pemain == "":
         else:
             st.warning("Tulis namamu dulu ya!")
 else:
-    # Sidebar dengan Link Audio Stabil
+    # Sidebar dengan Audio player HTML agar tombol Play/Pause responsif di perangkat seluler/iPad
     with st.sidebar:
         st.header(f"Explorer: {st.session_state.nama_pemain} 🇮🇩")
         st.metric("Skor Sementara", f"{st.session_state.skor} Poin")
@@ -47,8 +47,13 @@ else:
         
         st.divider()
         st.subheader("🎵 Backsound Alam")
-        # Menggunakan tautan audio alternatif yang sangat stabil dan langsung bisa diputar
-        st.audio("https://upload.wikimedia.org/wikipedia/commons/b/b3/Enchanted_Forest_Ambient.ogg", format="audio/ogg")
+        # Menggunakan pemutar audio HTML bawaan agar tombol play langsung bisa diklik di Safari/HP
+        st.markdown("""
+            <audio controls loop style="width: 100%;">
+                <source src="https://actions.google.com/sounds/v1/ambiences/forest_birds.ogg" type="audio/ogg">
+                Browser kamu tidak Mendukung pemutar audio.
+            </audio>
+        """, unsafe_allow_html=True)
 
     # Ambil soal berdasarkan urutan acak
     if st.session_state.no_soal < len(st.session_state.soal_acak):
@@ -57,7 +62,6 @@ else:
         st.title(f"Soal No. {st.session_state.no_soal + 1}")
         st.subheader(f"Kategori: {h['kategori']}")
         
-        # Tampilan Ikon Emoji Rapi & Cepat
         st.markdown(f"<h1 style='text-align: center; font-size: 90px;'>{h['ikon']}</h1>", unsafe_allow_html=True)
         st.info("💡 Analisis wilayah dan ikon di atas, lalu buka petunjuk jika diperlukan!")
         st.divider()
