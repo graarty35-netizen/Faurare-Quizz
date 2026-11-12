@@ -1,4 +1,8 @@
 import streamlit as st
+import time
+
+# Konfigurasi Halaman Web
+st.set_page_config(page_title="RareFauna Quiz", page_icon="🌍")
 
 # 1. Database 10 Hewan Langka
 hewan_langka = [
@@ -14,48 +18,80 @@ hewan_langka = [
     {"nama": "blobfish", "kategori": "Ikan Laut Dalam", "clues": ["🌊 Clue 1: Hidup di laut dalam yang sangat gelap dan tekanan tinggi.", "🍮 Clue 2: Tubuhnya seperti massa agar-agar.", "🏆 Clue 3: Pernah dinobatkan sebagai hewan paling jelek."]}
 ]
 
-# 2. Pengaturan Variabel Memori Web (Session State)
-if 'skor' not in st.session_state:
-    st.session_state.skor = 0
-if 'no_soal' not in st.session_state:
-    st.session_state.no_soal = 0
+# 2. Pengaturan Variabel Memori
+if 'skor' not in st.session_state: st.session_state.skor = 0
+if 'no_soal' not in st.session_state: st.session_state.no_soal = 0
+if 'nama_pemain' not in st.session_state: st.session_state.nama_pemain = ""
 
-# 3. Tampilan Halaman Web
-st.title("🌍 RAREFAUNA QUIZ 🌍")
-st.write("Tebak 10 Hewan Langka di Dunia!")
-st.divider()
-
-# Jika kuis masih berlangsung
-if st.session_state.no_soal < len(hewan_langka):
-    hewan = hewan_langka[st.session_state.no_soal]
-    
-    st.subheader(f"Soal {st.session_state.no_soal + 1}: {hewan['kategori']}")
-    
-    # Menampilkan Clue
-    st.info(hewan['clues'][0])
-    st.info(hewan['clues'][1])
-    st.info(hewan['clues'][2])
-    
-    # Input Jawaban
-    jawaban = st.text_input("Ketik tebakanmu di sini:", key=f"jawab_{st.session_state.no_soal}")
-    
-    if st.button("Kirim Jawaban"):
-        # Validasi jawaban (huruf kecil semua)
-        if jawaban.lower().strip() == hewan['nama']:
-            st.success(f"✅ BENAR! Jawabannya adalah {hewan['nama'].capitalize()}.")
-            st.session_state.skor += 10
-            st.session_state.no_soal += 1
+# 3. Halaman Login
+if st.session_state.nama_pemain == "":
+    st.title("🌍 RAREFAUNA QUIZ 🌍")
+    st.write("Selamat datang di Ekspedisi Hewan Langka!")
+    nama = st.text_input("Siapa namamu, Explorer?")
+    if st.button("Mulai Petualangan!"):
+        if nama:
+            st.session_state.nama_pemain = nama
             st.rerun()
         else:
-            st.error("❌ Salah! Coba tebak lagi ya.")
+            st.warning("Tulis namamu dulu ya sebelum mulai!")
 
-# Jika kuis selesai
+# 4. Halaman Kuis Utama
 else:
-    st.balloons()
-    st.success("🎉 SELAMAT! Kamu telah menyelesaikan kuis. 🎉")
-    st.header(f"Total Skormu: {st.session_state.skor} Poin")
-    
-    if st.button("Main Lagi"):
-        st.session_state.skor = 0
-        st.session_state.no_soal = 0
-        st.rerun()
+    # --- SIDEBAR (Panel Samping) ---
+    with st.sidebar:
+        st.header(f"Halo, {st.session_state.nama_pemain}! 🤠")
+        st.metric("Skor Sementara", f"{st.session_state.skor} Poin")
+        
+        st.write("Progres Kuis:")
+        progress_bar = st.session_state.no_soal / len(hewan_langka)
+        st.progress(progress_bar)
+
+    # --- KONTEN KUIS ---
+    if st.session_state.no_soal < len(hewan_langka):
+        hewan = hewan_langka[st.session_state.no_soal]
+        
+        st.title(f"Soal {st.session_state.no_soal + 1}")
+        st.subheader(hewan['kategori'])
+        st.divider()
+        
+        # Fitur Buka-Tutup Clue (Expander)
+        st.write("🔍 **Buka clue di bawah ini jika kamu butuh bantuan:**")
+        with st.expander("Buka Clue 1"): st.info(hewan['clues'][0])
+        with st.expander("Buka Clue 2"): st.info(hewan['clues'][1])
+        with st.expander("Buka Clue 3 (Paling Jelas)"): st.info(hewan['clues'][2])
+        
+        jawaban = st.text_input("Ketik tebakanmu di sini:", key=f"jawab_{st.session_state.no_soal}")
+        
+        # Dua Tombol Bersebelahan
+        kolom1, kolom2 = st.columns(2)
+        
+        with kolom1:
+            if st.button("Kirim Jawaban", use_container_width=True):
+                if jawaban.lower().strip() == hewan['nama']:
+                    st.success(f"✅ BENAR! Jawabannya {hewan['nama'].capitalize()}.")
+                    st.session_state.skor += 10
+                    st.session_state.no_soal += 1
+                    time.sleep(1.5) # Jeda agar pesan terbaca sebelum ganti soal
+                    st.rerun()
+                else:
+                    st.error("❌ Salah! Coba tebak lagi ya.")
+                    
+        with kolom2:
+            if st.button("Nyerah & Lewati 🏳️", use_container_width=True):
+                st.warning(f"Sayang sekali! Jawabannya adalah **{hewan['nama'].capitalize()}**.")
+                st.session_state.no_soal += 1
+                time.sleep(2)
+                st.rerun()
+
+    # --- HALAMAN SELESAI ---
+    else:
+        st.balloons()
+        st.success("🎉 EKSPEDISI SELESAI! 🎉")
+        st.header(f"Kerja bagus, {st.session_state.nama_pemain}!")
+        st.subheader(f"Total Skormu: {st.session_state.skor} Poin")
+        
+        if st.button("Main Lagi"):
+            st.session_state.skor = 0
+            st.session_state.no_soal = 0
+            st.session_state.nama_pemain = ""
+            st.rerun()
