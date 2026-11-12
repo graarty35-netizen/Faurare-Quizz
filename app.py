@@ -1,92 +1,86 @@
 import streamlit as st
 import time
 
-# Konfigurasi Halaman Web
-st.set_page_config(page_title="RareFauna Quiz: Endemik Indonesia", page_icon="🇮🇩", layout="centered")
+st.set_page_config(page_title="RareFauna Quiz Indonesia", page_icon="🇮🇩", layout="centered")
 
-# 1. Database 10 Hewan Endemik Asli Indonesia
+# Database 10 Hewan Endemik Indonesia
 hewan_langka = [
-    {
-        "nama": "komodo", 
-        "kategori": "Reptil Purba / NTT", 
-        "ikon": "🦖🏝️", 
-        "clues": ["✨ Clue 1: Reptil terbesar di dunia yang masih hidup.", "🇮🇩 Clue 2: Air liur saya mengandung bakteri dan racun kuat.", "🏝️ Clue 3: Habitat asli hanya di pulau-pulau wilayah Nusa Tenggara Timur."],
-        "fakta": "Komodo adalah kadal terbesar di bumi yang panjangnya bisa mencapai 3 meter dengan berat hingga lebih dari 70 kg!"
-    },
-    {
-        "nama": "orangutan", 
-        "kategori": "Primata Hutan / Sumatera & Kalimantan", 
-        "ikon": "🦧🌴", 
-        "clues": ["✨ Clue 1: Nama saya berarti 'manusia hutan' dalam bahasa lokal.", "🟠 Clue 2: Bulu tubuh saya berwarna jingga kecoklatan yang khas.", "🌴 Clue 3: Hewan arboreal yang menghabiskan sebagian besar hidup di atas pohon."],
-        "fakta": "Orangutan memiliki tingkat kecerdasan yang tinggi dan mampu menggunakan alat-alat sederhana untuk mencari makan di alam liar."
-    },
-    {
-        "nama": "badak jawa", 
-        "kategori": "Mamalia Bercula Satu / Ujung Kulon", 
-        "ikon": "🦏🌿", 
-        "clues": ["✨ Clue 1: Salah satu mamalia paling langka dan terancam punah di bumi.", "🦄 Clue 2: Hanya memiliki satu cula di bagian hidungnya.", "🌊 Clue 3: Suaka terakhir perlindungan kami ada di Taman Nasional Ujung Kulon."],
-        "fakta": "Badak Jawa sangat menyukai kubangan lumpur untuk menjaga suhu tubuh mereka tetap dingin dan melindungi kulit dari sengatan matahari."
-    },
-    {
-        "nama": "harimau sumatera", 
-        "kategori": "Karnivora / Pulau Sumatera", 
-        "ikon": "🐅🍂", 
-        "clues": ["✨ Clue 1: Subspesies harimau terkecil yang masih bertahan hidup.", "🖤 Clue 2: Garis-garis loreng di tubuh saya lebih rapat dan gelap.", "🇮🇩 Clue 3: Merupakan kucing besar satu-satunya yang tersisa di Indonesia."],
-        "fakta": "Harimau sumatera adalah perenang yang sangat handal dan sering sengaja berendam di sungai untuk mendinginkan tubuh."
-    },
-    {
-        "nama": "anoa", 
-        "kategori": "Mamalia / Sulawesi", 
-        "ikon": "🐃⛰️", 
-        "clues": ["✨ Clue 1: Sering dijuluki sebagai 'kerbau kerdil' karena ukurannya.", "🛡️ Clue 2: Memiliki sepasang tanduk lurus dan tajam untuk pertahanan diri.", "🇮🇩 Clue 3: Merupakan hewan endemik asli dari pulau Sulawesi."],
-        "fakta": "Anoa sangat suka berendam di lumpur layaknya kerbau dan memiliki sifat yang cenderung pemalu serta soliter (menyendiri) di dalam hutan."
-    },
-    {
-        "nama": "cendrawasih", 
-        "kategori": "Burung Eksotis / Papua", 
-        "ikon": "🦜✨", 
-        "clues": ["✨ Clue 1: Terkenal dengan sebutan 'Burung Surga' karena keindahannya.", "🎨 Clue 2: Memiliki bulu ekor panjang yang sangat berwarna-warni dan megah.", "🇮🇩 Clue 3: Habitat utama burung ini berada di hutan hujan Papua."],
-        "fakta": "Keindahan bulu burung cendrawasih membuat mereka sering menjadi simbol budaya khas masyarakat tanah Papua."
-    },
-    {
-        "nama": "babirusa", 
-        "kategori": "Mamalia Unik / Sulawesi", 
-        "ikon": "🐗🦷", 
-        "clues": ["✨ Clue 1: Namanya gabungan dari babi dan rusa karena bentuk gigi.", "🦷 Clue 2: Taring atas jantan tumbuh melengkung menembus kulit moncongnya.", "🇮🇩 Clue 3: Habitat aslinya dapat ditemukan di hutan hujan pulau Sulawesi."],
-        "fakta": "Taring melengkung pada babirusa jantan bisa terus tumbuh melingkar hingga hampir menyentuh bagian mata mereka jika tidak diasah."
-    },
-    {
-        "nama": "maleo", 
-        "kategori": "Burung Unik / Sulawesi", 
-        "ikon": "🥚🔥", 
-        "clues": ["✨ Clue 1: Burung darat berukuran sedang dengan benjolan khas di kepala.", "🌋 Clue 2: Tidak mengerami telurnya sendiri, melainkan ditimbun di pasir panas.", "🔥 Clue 3: Memanfaatkan panas bumi atau pasir pantai vulkanik untuk menetaskan telur."],
-        "fakta": "Anak burung maleo bisa langsung terbang mencari makan sendiri sesaat setelah menetas tanpa harus disuapi oleh induknya."
-    },
-    {
-        "nama": "tarsius", 
-        "kategori": "Primata Mungil / Sulawesi", 
-        "ikon": "👀🌿", 
-        "clues": ["✨ Clue 1: Salah satu primata terkecil di dunia dengan mata besar.", "🔄 Clue 2: Mampu memutar kepalanya hingga 180 derajat ke belakang.", "🇮🇩 Clue 3: Banyak ditemukan melompat di pepohonan hutan Sulawesi."],
-        "fakta": "Meskipun bertubuh sangat mungil, tarsius adalah karnivora murni yang memakan serangga kecil hingga kadal pohon."
-    },
-    {
-        "nama": "jalak bali", 
-        "kategori": "Burung Khas / Bali", 
-        "ikon": "🕊️🌺", 
-        "clues": ["✨ Clue 1: Burung pengicau berbulu putih bersih dengan bercak biru di mata.", "🌸 Clue 2: Memiliki jambul indah di bagian belakang kepalanya.", "🏝️ Clue 3: Merupakan maskot fauna resmi dari pulau Bali."],
-        "fakta": "Jalak bali adalah salah satu burung paling dilindungi di dunia karena populasinya di alam liar yang sempat sangat kritis."
-    }
+    {"nama": "komodo", "kategori": "Reptil Purba / NTT", "ikon": "🦖🏝️", "clues": ["✨ Clue 1: Reptil terbesar di dunia.", "🇮🇩 Clue 2: Air liur beracun.", "🏝️ Clue 3: Endemik NTT."], "fakta": "Komodo adalah kadal terbesar di bumi yang panjangnya bisa mencapai 3 meter!"},
+    {"nama": "orangutan", "kategori": "Primata / Sumatera & Kalimantan", "ikon": "🦧🌴", "clues": ["✨ Clue 1: Berarti 'manusia hutan'.", "🟠 Clue 2: Berbulu jingga.", "🌴 Clue 3: Hidup di atas pohon."], "fakta": "Orangutan sangat cerdas dan mampu menggunakan alat."} ,
+    {"nama": "badak jawa", "kategori": "Mamalia / Ujung Kulon", "ikon": "🦏🌿", "clues": ["✨ Clue 1: Salah satu mamalia paling langka.", "🦄 Clue 2: Bercula satu.", "🌊 Clue 3: Di Ujung Kulon."], "fakta": "Badak jawa menyukai kubangan lumpur untuk mendinginkan tubuh."},
+    {"nama": "harimau sumatera", "kategori": "Karnivora / Sumatera", "ikon": "🐅🍂", "clues": ["✨ Clue 1: Harimau terkecil tersisa.", "🖤 Clue 2: Loreng sangat rapat.", "🇮🇩 Clue 3: Kucing besar khas Indonesia."], "fakta": "Harimau sumatera adalah perenang yang sangat handal."},
+    {"nama": "anoa", "kategori": "Mamalia / Sulawesi", "ikon": "🐃⛰️", "clues": ["✨ Clue 1: Dijuluki kerbau kerdil.", "🛡️ Clue 2: Bertanduk lurus tajam.", "🇮🇩 Clue 3: Endemik Sulawesi."], "fakta": "Anoa bersifat soliter dan suka berendam di lumpur."},
+    {"nama": "cendrawasih", "kategori": "Burung / Papua", "ikon": "🦜✨", "clues": ["✨ Clue 1: Dijuluki Burung Surga.", "🎨 Clue 2: Bulu ekor sangat megah.", "🇮🇩 Clue 3: Habitat di hutan Papua."], "fakta": "Keindahan bulunya menjadi simbol budaya khas Papua."},
+    {"nama": "babirusa", "kategori": "Mamalia / Sulawesi", "ikon": "🐗🦷", "clues": ["✨ Clue 1: Gabungan babi dan rusa.", "🦷 Clue 2: Taring menembus moncong.", "🇮🇩 Clue 3: Asli Sulawesi."], "fakta": "Taring jantan bisa melingkar hampir menyentuh mata."},
+    {"nama": "maleo", "kategori": "Burung / Sulawesi", "ikon": "🥚🔥", "clues": ["✨ Clue 1: Ada benjolan di kepala.", "🌋 Clue 2: Telur ditimbun pasir panas.", "🔥 Clue 3: Memanfaatkan panas vulkanik."], "fakta": "Anak maleo bisa langsung terbang setelah menetas."},
+    {"nama": "tarsius", "kategori": "Primata / Sulawesi", "ikon": "👀🌿", "clues": ["✨ Clue 1: Primata bermata sangat besar.", "🔄 Clue 2: Kepala bisa putar 180 derajat.", "🇮🇩 Clue 3: Lompat di pohon Sulawesi."], "fakta": "Matanya lebih besar daripada ukuran otaknya."},
+    {"nama": "jalak bali", "kategori": "Burung / Bali", "ikon": "🕊️🌺", "clues": ["✨ Clue 1: Bulu putih bersih bermata biru.", "🌸 Clue 2: Memiliki jambul indah.", "🏝️ Clue 3: Maskot fauna resmi Bali."], "fakta": "Jalak bali termasuk burung paling dilindungi di dunia."}
 ]
 
-# 2. Pengaturan Memori Sesi
-if 'skor' not in st.session_state:
-    st.session_state.skor = 0
-if 'no_soal' not in st.session_state:
-    st.session_state.no_soal = 0
-if 'nama_pemain' not in st.session_state:
-    st.session_state.nama_pemain = ""
+if 'skor' not in st.session_state: st.session_state.skor = 0
+if 'no_soal' not in st.session_state: st.session_state.no_soal = 0
+if 'nama_pemain' not in st.session_state: st.session_state.nama_pemain = ""
 
-# 3. Halaman Login
 if st.session_state.nama_pemain == "":
     st.title("🇮🇩 KUIS ENDEMIK FAUNA INDONESIA 🇮🇩")
-    st.write("Selamat datang di Ek
+    st.write("Selamat datang di Ekspedisi Nusantara!")
+    nama = st.text_input("Siapa nama panggilanmu, Explorer?")
+    if st.button("Mulai Ekspedisi!", use_container_width=True):
+        if nama:
+            st.session_state.nama_pemain = nama
+            st.rerun()
+        else:
+            st.warning("Tulis namamu dulu ya!")
+else:
+    with st.sidebar:
+        st.header(f"Halo, {st.session_state.nama_pemain}! 🇮🇩")
+        st.metric("Skor", f"{st.session_state.skor} Poin")
+        st.progress(st.session_state.no_soal / len(hewan_langka))
+        st.audio("https://actions.google.com/sounds/v1/ambiences/forest_birds.ogg", format="audio/ogg")
+
+    if st.session_state.no_soal < len(hewan_langka):
+        h = hewan_langka[st.session_state.no_soal]
+        st.title(f"Soal No. {st.session_state.no_soal + 1}")
+        st.subheader(f"Kategori: {h['kategori']}")
+        st.markdown(f"<h1 style='text-align: center; font-size: 70px;'>{h['ikon']}</h1>", unsafe_allow_html=True)
+        st.divider()
+        
+        with st.expander("✨ Buka Clue 1"): st.write(h['clues'][0])
+        with st.expander("🇮🇩 Buka Clue 2"): st.write(h['clues'][1])
+        with st.expander("🗺️ Buka Clue 3"): st.write(h['clues'][2])
+        
+        jawaban = st.text_input("Ketik tebakan nama hewan:", key=f"j_{st.session_state.no_soal}")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Kirim Jawaban", use_container_width=True):
+                if jawaban.lower().strip() == h['nama']:
+                    st.success(f"✅ BENAR! **{h['nama'].capitalize()}**")
+                    st.session_state.skor += 10
+                    st.session_state.no_soal += 1
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error("❌ Salah, coba lagi!")
+        with col2:
+            if st.button("Nyerah 🏳️", use_container_width=True):
+                st.warning(f"Jawabannya: **{h['nama'].capitalize()}**")
+                st.session_state.no_soal += 1
+                time.sleep(1.5)
+                st.rerun()
+    else:
+        st.balloons()
+        st.success("🎉 EKSPEDISI SELESAI! 🎉")
+        st.header(f"Total Skormu: {st.session_state.skor} / 100")
+        
+        st.divider()
+        st.header("🏛️ Museum Mini Ensiklopedia")
+        for i, item in enumerate(hewan_langka):
+            with st.expander(f"🇮🇩 {i+1}. {item['nama'].capitalize()} ({item['kategori']})"):
+                st.markdown(f"### {item['ikon']}")
+                st.write(f"**Fakta:** {item['fakta']}")
+                
+        if st.button("Main Lagi", use_container_width=True):
+            st.session_state.skor = 0
+            st.session_state.no_soal = 0
+            st.session_state.nama_pemain = ""
+            st.rerun()
