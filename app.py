@@ -1,12 +1,8 @@
 import base64
 import html
-import os
 import random
 import re
-import textwrap
-
 import streamlit as st
-import streamlit.components.v1 as components
 
 # ─────────────────────────────────────────────────────────────
 # KONFIGURASI HALAMAN
@@ -15,14 +11,35 @@ st.set_page_config(
     page_title="RareFauna Retro Quiz",
     page_icon="🌲",
     layout="centered",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 POIN_PER_SOAL = 10
 
 # ─────────────────────────────────────────────────────────────
-# DATABASE 10 HEWAN ENDEMIK
+# DATABASE 3 KARAKTER & 10 HEWAN ENDEMIK
 # ─────────────────────────────────────────────────────────────
+daftar_karakter = {
+    "Red (Ranger Hutan)": {
+        "deskripsi": "Ahli bertahan hidup di rimba belantara, ditemani bola penangkap hijau.",
+        "avatar": "🧑‍🌾",
+        "warna_badge": "#22c55e",
+        "item": "🟢 Poké-Ball Hijau"
+    },
+    "Blue (Peneliti Satwa)": {
+        "deskripsi": "Ilmuwan muda pengamat burung dan primata langka Nusantara.",
+        "avatar": "🧑‍🔬",
+        "warna_badge": "#3b82f6",
+        "item": "🔵 Poké-Ball Biru"
+    },
+    "Leaf (Penjelajah Rimba)": {
+        "deskripsi": "Pencinta reptil purba dan penjelajah gua misterius.",
+        "avatar": "🧝‍♀️",
+        "warna_badge": "#eab308",
+        "item": "🔴 Poké-Ball Merah"
+    }
+}
+
 daftar_hewan = [
     {"nama": "komodo", "alias": ["komodo dragon", "biawak komodo"],
      "kategori": "Reptil Purba / NTT", "ikon": "🦎", "latar": "🏝️",
@@ -41,7 +58,7 @@ daftar_hewan = [
      "clues": ["Salah satu mamalia paling langka dan terancam punah di bumi.",
                "Memiliki cula tunggal (bercula satu) yang khas.",
                "Habitat aslinya dilindungi di Taman Nasional Ujung Kulon."],
-     "fakta": "Badak jawa sangat menyukai kubangan lumpur di hutan hujan untuk mendinginkan tubuh mereka."},
+     "fakta": "Badak jawa menyukai kubangan lumpur di hutan hujan untuk mendinginkan tubuh mereka."},
     {"nama": "harimau sumatera", "alias": ["harimau sumatra", "macan sumatera", "macan sumatra"],
      "kategori": "Karnivora / Sumatera", "ikon": "🐅", "latar": "🍂",
      "clues": ["Spesies harimau terkecil yang masih bertahan hidup saat ini.",
@@ -88,13 +105,6 @@ daftar_hewan = [
 TOTAL_SOAL = len(daftar_hewan)
 SKOR_MAKS = TOTAL_SOAL * POIN_PER_SOAL
 
-PUJIAN = [
-    "Mantap, Explorer! Matamu setajam elang hutan!",
-    "Luar biasa! Penjaga rimba pasti bangga padamu!",
-    "Tepat sekali! Kamu memang jago satwa Nusantara!",
-    "Kereeen! Satu hewan langka berhasil kamu kenali!",
-    "Yeay! Ranger hutan memberimu jempol! 👍",
-]
 RATAPAN = [
     "Waduh, karakter pixel-mu tersandung akar pohon!",
     "Salah! Ada suara aneh dari semak-semak...",
@@ -104,7 +114,7 @@ RATAPAN = [
 ]
 
 # ─────────────────────────────────────────────────────────────
-# CSS KUSTOM — TAMPILAN LEBIH BERSIH, RAPI, & ELEGAN
+# CSS KUSTOM — ELEGAN DAN BERSIH
 # ─────────────────────────────────────────────────────────────
 CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
@@ -113,7 +123,7 @@ html, body, .stApp, p, label, li, span, div, input, textarea, button {
     font-family: 'VT323', monospace;
 }
 .stApp p, .stApp li, .stApp label, [data-testid="stMarkdownContainer"] { font-size: 1.4rem; line-height: 1.3; }
-h1, h2, h3, .judul, .pixel-font, .stButton button, [data-testid="stFormSubmitButton"] button {
+h1, h2, h3, .judul, .stButton button, [data-testid="stFormSubmitButton"] button {
     font-family: 'Press Start 2P', monospace !important;
 }
 
@@ -121,42 +131,44 @@ h1, h2, h3, .judul, .pixel-font, .stButton button, [data-testid="stFormSubmitBut
     background: linear-gradient(135deg, #03080f 0%, #081424 50%, #030f0b 100%);
     color: #e2f8ec;
 }
-[data-testid="stHeader"] { background: transparent; }
-footer, #MainMenu { visibility: hidden; }
-.block-container { position: relative; z-index: 2; max-width: 720px; padding-top: 2rem; padding-bottom: 90px; }
 
-/* Pemutar Musik Minimalis Melayang di Pojok Kanan Atas */
-.floating-audio {
+[data-testid="stHeader"], [data-testid="stToolbar"], #MainMenu, footer {
+    display: none !important;
+}
+
+.block-container { position: relative; z-index: 2; max-width: 620px; padding-top: 1.5rem; padding-bottom: 60px; }
+
+/* Tombol Musik Minimalis di Pojok Kanan Atas */
+.music-toggle {
     position: fixed;
     top: 12px;
-    right: 15px;
-    z-index: 9999;
-    background: rgba(4, 18, 12, 0.85);
-    backdrop-filter: blur(6px);
+    right: 12px;
+    z-index: 99999;
+    background: rgba(10, 25, 18, 0.95);
     border: 2px solid #22c55e;
     padding: 4px 8px;
-    border-radius: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    border-radius: 4px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.6);
 }
-.floating-audio audio {
-    height: 28px;
-    width: 125px;
+.music-toggle audio { height: 24px; width: 105px; }
+
+.game-header {
+    background: rgba(4, 16, 11, 0.9);
+    border: 3px solid #22c55e;
+    border-radius: 6px;
+    padding: 10px;
+    text-align: center;
+    margin-bottom: 16px;
+    box-shadow: 4px 4px 0px rgba(0,0,0,0.5);
 }
 
-/* Sidebar Rapi */
-[data-testid="stSidebar"] {
-    background: rgba(3, 12, 8, 0.95);
-    border-right: 3px solid #22c55e;
-}
-
-/* Kotak Kartu Estetik */
 .pixel-box {
     background: rgba(5, 20, 14, 0.85);
     backdrop-filter: blur(6px);
     border: 3px solid #22c55e;
-    box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.6);
-    padding: 22px 18px;
-    margin: 8px 4px 20px;
+    box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.6);
+    padding: 20px 16px;
+    margin: 6px 0 16px;
     text-align: center;
     border-radius: 6px;
 }
@@ -165,43 +177,32 @@ footer, #MainMenu { visibility: hidden; }
 .pixel-box.merah { border-color: #f87171; background: rgba(127, 29, 29, 0.3); }
 
 .judul {
-    text-align: center; color: #4ade80 !important; line-height: 1.6;
-    font-size: clamp(1rem, 4vw, 1.45rem); text-shadow: 2px 2px 0 #022c14;
-    margin: 0 0 10px 0;
+    text-align: center; color: #facc15 !important; line-height: 1.5;
+    font-size: clamp(1.1rem, 4.5vw, 1.5rem); text-shadow: 2px 2px 0 #78350f;
+    margin: 0 0 8px 0;
 }
-.judul .emas { color: #facc15; }
-
-.hud { display: flex; justify-content: space-between; gap: 8px; margin: 4px 4px 14px; }
-.hud span {
-    flex: 1; text-align: center; padding: 8px 4px; font-family: 'Press Start 2P', monospace;
-    font-size: clamp(0.5rem, 2.3vw, 0.7rem); background: rgba(3, 12, 8, 0.9);
-    border: 2px solid #facc15; color: #fde68a; border-radius: 4px;
-}
-.bar { height: 14px; margin: 0 4px 16px; background: #020a06; border: 2px solid #22c55e; padding: 1px; border-radius: 3px; }
-.bar > i { display: block; height: 100%; background: #4ade80; border-radius: 1px; }
 
 .ikon-besar {
-    display: block; font-size: clamp(70px, 18vw, 105px); line-height: 1.1; margin: 8px 0;
-    filter: drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.5));
+    display: block; font-size: clamp(65px, 18vw, 95px); line-height: 1.1; margin: 6px 0;
+    filter: drop-shadow(3px 3px 0 rgba(0, 0, 0, 0.5));
 }
-.bisik { font-size: 1.35rem; font-style: italic; color: #bef264; margin-top: 4px; }
+.bisik { font-size: 1.3rem; font-style: italic; color: #bef264; margin-top: 4px; }
 
 .clue {
-    background: rgba(250, 204, 21, 0.08); border-left: 5px solid #facc15;
-    padding: 8px 12px; margin: 8px 4px; font-size: 1.35rem;
+    background: rgba(250, 204, 21, 0.08); border-left: 4px solid #facc15;
+    padding: 6px 10px; margin: 6px 0; font-size: 1.3rem;
 }
 
-.reaksi { font-size: clamp(2.2rem, 10vw, 3.5rem); letter-spacing: 4px; margin-bottom: 4px; }
-.teks-reaksi { font-family: 'Press Start 2P', monospace; font-size: clamp(0.55rem, 2.5vw, 0.75rem); line-height: 1.6; margin-bottom: 8px; }
+.reaksi { font-size: clamp(2rem, 9vw, 3.2rem); letter-spacing: 4px; margin-bottom: 4px; }
+.teks-reaksi { font-family: 'Press Start 2P', monospace; font-size: clamp(0.5rem, 2.2vw, 0.7rem); line-height: 1.5; margin-bottom: 6px; }
 
 .gelar {
     text-align: center; font-family: 'Press Start 2P', monospace; color: #facc15;
-    font-size: clamp(1.1rem, 5.5vw, 2.2rem); text-shadow: 3px 3px 0 #78350f; margin: 10px 0; line-height: 1.4;
+    font-size: clamp(1rem, 5vw, 2rem); text-shadow: 3px 3px 0 #78350f; margin: 8px 0; line-height: 1.4;
 }
 
-/* Tombol Konsisten */
 .stButton > button, [data-testid="stFormSubmitButton"] > button {
-    min-height: 3rem; border-radius: 6px; border: 3px solid #022c14; color: #052e16;
+    min-height: 3rem; border-radius: 4px; border: 3px solid #022c14; color: #052e16;
     font-size: clamp(0.55rem, 2.5vw, 0.72rem); line-height: 1.4; padding: 8px 12px;
     background: #4ade80; box-shadow: 0 4px 0 #166534;
     transition: all 0.1s ease; margin-bottom: 6px; width: 100%;
@@ -213,17 +214,14 @@ footer, #MainMenu { visibility: hidden; }
 }
 .stButton > button[kind="primary"]:hover { background: #fde047; }
 
-/* Input */
 .stTextInput input {
-    min-height: 3.1rem; border-radius: 6px !important; font-size: 1.5rem;
+    min-height: 3rem; border-radius: 4px !important; font-size: 1.5rem;
     background: #020a06 !important; color: #f0fdf4 !important; border: 3px solid #22c55e !important;
 }
 .stTextInput input::placeholder { color: #6ee7b7 !important; opacity: 0.6; }
-.stTextInput input:focus { border-color: #facc15 !important; box-shadow: 0 0 8px rgba(250,204,21,0.4) !important; }
-[data-testid="stForm"] { background: rgba(3, 15, 10, 0.85); border: 3px solid #22c55e; border-radius: 8px; padding: 12px; }
-[data-testid="stExpander"] { background: rgba(3, 15, 10, 0.85); border: 2px solid #22c55e; border-radius: 6px; }
-[data-testid="stMetricValue"] { font-family: 'Press Start 2P', monospace; color: #facc15; font-size: 1.2rem; }
-[data-testid="stMetricLabel"] p { color: #86efac; }
+.stTextInput input:focus { border-color: #facc15 !important; box-shadow: 0 0 6px rgba(250,204,21,0.4) !important; }
+[data-testid="stForm"] { background: rgba(3, 15, 10, 0.85); border: 3px solid #22c55e; border-radius: 6px; padding: 10px; }
+[data-testid="stExpander"] { background: rgba(3, 15, 10, 0.85); border: 2px solid #22c55e; border-radius: 4px; }
 hr { border-color: rgba(74, 222, 128, 0.25) !important; }
 """
 
@@ -233,6 +231,7 @@ hr { border-color: rgba(74, 222, 128, 0.25) !important; }
 if 'skor' not in st.session_state: st.session_state.skor = 0
 if 'no_soal' not in st.session_state: st.session_state.no_soal = 0
 if 'nama_pemain' not in st.session_state: st.session_state.nama_pemain = ""
+if 'karakter_pilihan' not in st.session_state: st.session_state.karakter_pilihan = None
 if 'status_jawab' not in st.session_state: st.session_state.status_jawab = None
 if 'fakta_sekarang' not in st.session_state: st.session_state.fakta_sekarang = ""
 if 'soal_acak' not in st.session_state: 
@@ -240,88 +239,119 @@ if 'soal_acak' not in st.session_state:
 
 st.markdown(f"<style>{CSS}</style>", unsafe_allow_html=True)
 
-# Pemutar Musik Minimalis di Pojok Kanan Atas (Tidak Mengganggu)
+# Pemutar Musik Minimalis di Pojok Kanan Atas
 st.markdown("""
-    <div class="floating-audio">
+    <div class="music-toggle">
         <audio controls loop preload="auto">
             <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c325e648.mp3?filename=game-level-music-143026.mp3" type="audio/mpeg">
         </audio>
     </div>
 """, unsafe_allow_html=True)
 
+# Header Game Bersih
+st.markdown("""
+    <div class="game-header">
+        <span style="font-size: 24px;">🌲 🇮🇩 🌲</span>
+        <div style="font-family: 'Press Start 2P'; font-size: 0.75rem; color: #4ade80; margin-top: 4px;">RAREFAUNA RETRO QUIZ</div>
+    </div>
+""", unsafe_allow_html=True)
+
 # ─────────────────────────────────────────────────────────────
-# HALAMAN DEPAN (LOGIN)
+# TAHAP 1: HALAMAN LOGIN & PEMILIHAN KARAKTER (3 PILIHAN)
 # ─────────────────────────────────────────────────────────────
-if st.session_state.nama_pemain == "":
-    st.markdown("<h1 class='judul'>🌲 RAREFAUNA RETRO QUIZ 🌲</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #86efac;'>Ekspedisi Menjelajah Hutan Endemik Indonesia</p>", unsafe_allow_html=True)
+if st.session_state.nama_pemain == "" or st.session_state.karakter_pilihan is None:
+    st.markdown("<h1 class='judul'>PILIH KARAKTERMU!</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #a7d7b5; font-size: 1.15rem; margin-bottom: 14px;'>Pilih jagoan petualangmu sebelum masuk ke dalam hutan rimba.</p>", unsafe_allow_html=True)
     
-    st.markdown("""
-        <div class='pixel-box'>
-            <span style='font-size: 55px;'>🧭✨</span>
-            <p style='margin-top: 8px;'>Selamat datang, Explorer! Masukkan namamu untuk memulai ujian lapangan dan buktikan kamu layak menjadi Sarjana Satwa.</p>
-        </div>
-    """, unsafe_allow_html=True)
+    nama_input = st.text_input("Nama Panggilan Explorer:", placeholder="Ketik namamu...")
     
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        nama = st.text_input("Nama Panggilanmu:", placeholder="Ketik namamu di sini...")
-        if st.button("🕹️ MULAI EKSPEDISI", type="primary", use_container_width=True):
-            if nama.strip():
-                st.session_state.nama_pemain = nama.strip()
-                st.session_state.status_jawab = None
-                st.session_state.soal_acak = random.sample(daftar_hewan, len(daftar_hewan))
-                st.rerun()
-            else:
-                st.warning("⚠️ Masukkan namamu dulu, Explorer!")
+    st.markdown("### 👥 Pilih Trainer & Partner Satwa:")
+    
+    # Menampilkan 3 pilihan karakter berdampingan (ala pemilihan hero/karakter game)
+    c1, c2, c3 = st.columns(3)
+    
+    pilihan = None
+    with c1:
+        st.markdown(f"""
+            <div style="background: rgba(4,16,11,0.9); border: 2px solid #22c55e; border-radius: 6px; padding: 12px; text-align: center;">
+                <div style="font-size: 50px;">🧑‍🌾</div>
+                <div style="font-family: 'Press Start 2P'; font-size: 0.55rem; color: #4ade80; margin: 6px 0;">Red</div>
+                <div style="font-size: 0.95rem; color: #cbd5e1;">Ranger Hutan<br>🟢 Poké-Ball Hijau</div>
+            </div>
+        """, unsafe_allow_html=True)
+        if st.button("Pilih Red", key="btn_red", use_container_width=True):
+            pilihan = "Red (Ranger Hutan)"
+            
+    with c2:
+        st.markdown(f"""
+            <div style="background: rgba(4,16,11,0.9); border: 2px solid #3b82f6; border-radius: 6px; padding: 12px; text-align: center;">
+                <div style="font-size: 50px;">🧑‍🔬</div>
+                <div style="font-family: 'Press Start 2P'; font-size: 0.55rem; color: #3b82f6; margin: 6px 0;">Blue</div>
+                <div style="font-size: 0.95rem; color: #cbd5e1;">Peneliti<br>🔵 Poké-Ball Biru</div>
+            </div>
+        """, unsafe_allow_html=True)
+        if st.button("Pilih Blue", key="btn_blue", use_container_width=True):
+            pilihan = "Blue (Peneliti Satwa)"
+            
+    with c3:
+        st.markdown(f"""
+            <div style="background: rgba(4,16,11,0.9); border: 2px solid #eab308; border-radius: 6px; padding: 12px; text-align: center;">
+                <div style="font-size: 50px;">🧝‍♀️</div>
+                <div style="font-family: 'Press Start 2P'; font-size: 0.55rem; color: #eab308; margin: 6px 0;">Leaf</div>
+                <div style="font-size: 0.95rem; color: #cbd5e1;">Penjelajah<br>🔴 Poké-Ball Merah</div>
+            </div>
+        """, unsafe_allow_html=True)
+        if st.button("Pilih Leaf", key="btn_leaf", use_container_width=True):
+            pilihan = "Leaf (Penjelajah Rimba)"
+
+    if pilihan:
+        if nama_input.strip():
+            st.session_state.nama_pemain = nama_input.strip()
+            st.session_state.karakter_pilihan = pilihan
+            st.session_state.status_jawab = None
+            st.session_state.soal_acak = random.sample(daftar_hewan, len(daftar_hewan))
+            st.rerun()
+        else:
+            st.warning("⚠️ Masukkan nama panggilanmu terlebih dahulu di atas sebelum memilih karakter!")
+
 else:
     # ─────────────────────────────────────────────────────────────
-    # SIDEBAR RINGKAS
+    # TAHAP 2: AREA PERMAINAN UTAMA (MENAMPILKAN KARAKTER TERPILIH)
     # ─────────────────────────────────────────────────────────────
-    with st.sidebar:
-        st.markdown(f"### 🌲 {st.session_state.nama_pemain}")
-        st.metric("Skor Sementara", f"{st.session_state.skor} Poin")
-        st.progress(st.session_state.no_soal / TOTAL_SOAL)
-        st.caption(f"Posisi: Soal {st.session_state.no_soal + 1} dari {TOTAL_SOAL}")
-        st.divider()
-        st.caption("🎵 Musik latar tegang aktif di pojok kanan atas layar.")
-        if st.button("🔄 Reset / Keluar", use_container_width=True):
-            st.session_state.nama_pemain = ""
-            st.session_state.skor = 0
-            st.session_state.no_soal = 0
-            st.session_state.status_jawab = None
-            st.rerun()
-
-    # ─────────────────────────────────────────────────────────────
-    # AREA PERMAINAN UTAMA
-    # ─────────────────────────────────────────────────────────────
+    char_info = daftar_karakter[st.session_state.karakter_pilihan]
+    
     if st.session_state.no_soal < TOTAL_SOAL:
         h = st.session_state.soal_acak[st.session_state.no_soal]
         
-        # HUD Progress Atas
+        # Bar Informasi Profil Karakter & Progress Soal di Atas
         st.markdown(f"""
-            <div class='hud'>
-                <span>SOAL {st.session_state.no_soal + 1}/{TOTAL_SOAL}</span>
-                <span>WILAYAH: {h['kategori']}</span>
+            <div style="background: rgba(5,20,14,0.7); border: 2px solid {char_info['warna_badge']}; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span style="font-size: 24px; vertical-align: middle;">{char_info['avatar']}</span>
+                    <span style="font-family: 'Press Start 2P'; font-size: 0.55rem; color: {char_info['warna_badge']}; margin-left: 6px;">{st.session_state.nama_pemain} ({st.session_state.karakter_pilihan.split()[0]})</span>
+                </div>
+                <div style="text-align: right; font-size: 0.95rem;">
+                    🎯 <b>{st.session_state.no_soal + 1}/{TOTAL_SOAL}</b> | 🏆 <b>{st.session_state.skor} Poin</b>
+                </div>
             </div>
-            <div class='bar'><i style='width: {((st.session_state.no_soal + 1) / TOTAL_SOAL) * 100}%;'></i></div>
         """, unsafe_allow_html=True)
-        
-        # Kotak Soal & Kartu Ikon
+
+        # Kotak Soal & Kartu Ikon Hewan
         st.markdown(f"""
-            <div class='pixel-box kartu'>
-                <span class='ikon-latar'>{h['latar']}</span>
+            <div class='pixel-box'>
+                <div style='font-family: "Press Start 2P"; font-size: 0.6rem; color: #facc15; margin-bottom: 6px;'>WILAYAH: {h['kategori']}</div>
+                <span style='font-size: 35px; position: absolute; right: 18px; top: 16px;'>{h['latar']}</span>
                 <span class='ikon-besar'>{h['ikon']}</span>
-                <div class='bisik'>'Seekor hewan langka terpantau di area ini...'</div>
+                <div class='bisik'>'{char_info['item']} bersiap! Hewan misterius mengintip di dekatmu...'</div>
             </div>
         """, unsafe_allow_html=True)
         
-        # Tampilan Hasil Jawab (Benar / Salah dengan Reaksi Emoji)
+        # Tampilan Hasil Jawab (Benar / Salah)
         if st.session_state.status_jawab == 'benar':
-            st.markdown("""
+            st.markdown(f"""
                 <div class='pixel-box hijau'>
-                    <div class='reaksi'>🎉😃🎉</div>
-                    <div class='teks-reaksi'>JAWABAN BENAR! LUAR BIASA!</div>
+                    <div class='reaksi'>🎉 {char_info['avatar']} 😃 🎉</div>
+                    <div class='teks-reaksi'>BERHASIL DITANGKAP & DIKENALI! LUAR BIASA!</div>
                 </div>
             """, unsafe_allow_html=True)
             st.success(f"**Fakta Unik Hutan:** {st.session_state.fakta_sekarang}")
@@ -331,10 +361,10 @@ else:
                 st.rerun()
                 
         elif st.session_state.status_jawab == 'salah':
-            st.markdown("""
+            st.markdown(f"""
                 <div class='pixel-box merah'>
-                    <div class='reaksi'>😭👎❌</div>
-                    <div class='teks-reaksi'>KURANG TEPAT, EXPLORER!</div>
+                    <div class='reaksi'>😭 {char_info['avatar']} 👎 ❌</div>
+                    <div class='teks-reaksi'>MELARIKAN DIRI! TEBAKANMU SALAH.</div>
                 </div>
             """, unsafe_allow_html=True)
             st.error(random.choice(RATAPAN))
@@ -342,7 +372,6 @@ else:
                 st.session_state.status_jawab = None
                 st.rerun()
         else:
-            # Petunjuk (Clue) Bertahap
             with st.expander("🔍 Buka Petunjuk 1"):
                 st.markdown(f"<div class='clue'>✨ {h['clues'][0]}</div>", unsafe_allow_html=True)
             with st.expander("🔍 Buka Petunjuk 2"):
@@ -350,14 +379,13 @@ else:
             with st.expander("🎯 Buka Petunjuk Spesifik Wilayah"):
                 st.markdown(f"<div class='clue'>🗺️ {h['clues'][2]}</div>", unsafe_allow_html=True)
                 
-            # Form Input Tebakan
             with st.form(key=f"form_soal_{st.session_state.no_soal}", clear_on_submit=False):
                 jawaban = st.text_input("Ketik tebakan nama hewan:", placeholder="Contoh: komodo, anoa...")
-                col1, col2 = st.columns(2)
-                with col1:
-                    submit = st.form_submit_button("⚔️ Konfirmasi", type="primary", use_container_width=True)
-                with col2:
-                    lewat = st.form_submit_button("🏳️ Lewati", use_container_width=True)
+                col_btn1, col_btn2 = st.columns(2)
+                with col_btn1:
+                    submit = st.form_submit_button(f"⚔️ Tangkap / Tebak", type="primary", use_container_width=True)
+                with col_btn2:
+                    lewat = st.form_submit_button("🏳️ Kabur", use_container_width=True)
                 
                 if submit:
                     tebakan_bersih = re.sub(r'[^a-z0-9\s]', '', jawaban.lower().strip())
@@ -374,7 +402,7 @@ else:
                         st.rerun()
                         
                 if lewat:
-                    st.warning(f"Kamu melewatkan soal ini! Jawabannya adalah **{h['nama'].capitalize()}**.")
+                    st.warning(f"Kamu kabur! Jawabannya adalah **{h['nama'].capitalize()}**.")
                     st.session_state.no_soal += 1
                     st.rerun()
     else:
@@ -382,19 +410,18 @@ else:
         # HALAMAN AKHIR & MUSEUM MINI
         # ─────────────────────────────────────────────────────────────
         st.balloons()
-        st.markdown("<h2 class='judul'>🏆 EKSPEDISI HUTAN SELESAI 🏆</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 class='judul'>🏆 EKSPEDISI {st.session_state.karakter_pilihan.split()[0].upper()} SELESAI 🏆</h2>", unsafe_allow_html=True)
         
         st.markdown(f"""
             <div class='pixel-box emas'>
-                <p style='margin: 0; font-size: 1.3rem;'>Total Perolehan Nilai Akhir:</p>
-                <div style='font-family: "Press Start 2P"; font-size: 2.2rem; color: #facc15; margin: 8px 0;'>{st.session_state.skor} / {SKOR_MAKS}</div>
+                <p style='margin: 0; font-size: 1.2rem;'>Total Perolehan Nilai Akhir ({st.session_state.nama_pemain}):</p>
+                <div style='font-family: "Press Start 2P"; font-size: 2rem; color: #facc15; margin: 6px 0;'>{st.session_state.skor} / {SKOR_MAKS}</div>
             </div>
         """, unsafe_allow_html=True)
         
-        # Penentuan Gelar Kustom Sesuai Permintaanmu
         if st.session_state.skor >= 90:
             st.markdown("<div class='gelar'>S.Hwn</div>", unsafe_allow_html=True)
-            st.markdown("<p style='text-align: center; color: #86efac;'>Predikat: Ahli Zoologi Nusantara Sejati (Luar Biasa!)</p>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; color: #86efac;'>Predikat: Master Trainer & Ahli Zoologi Nusantara (Luar Biasa!)</p>", unsafe_allow_html=True)
         elif st.session_state.skor >= 60:
             st.markdown("<div class='gelar'>S.k</div>", unsafe_allow_html=True)
             st.markdown("<p style='text-align: center; color: #86efac;'>Predikat: Penjelajah Margasatwa Indonesia (Hebat!)</p>", unsafe_allow_html=True)
@@ -406,8 +433,7 @@ else:
             st.markdown("<p style='text-align: center; color: #fca5a5;'>Predikat: Tersesat di Hutan (Ayo Ujian Ulang!)</p>", unsafe_allow_html=True)
             
         st.divider()
-        st.markdown("<h3 style='text-align: center;'>🏛️ Museum Mini Ensiklopedia Fauna</h3>", unsafe_allow_html=True)
-        st.write("Pelajari kembali fakta unik dari ke-10 hewan endemik:")
+        st.markdown("<h3 style='text-align: center;'>🏛️ Museum Mini Ensiklopedia</h3>", unsafe_allow_html=True)
         
         for i, item in enumerate(daftar_hewan):
             with st.expander(f"🌲 {i+1}. {item['nama'].capitalize()} ({item['kategori']})"):
@@ -415,9 +441,11 @@ else:
                 st.write(f"**Fakta Unik:** {item['fakta']}")
                 
         st.divider()
-        if st.button("🔄 Ujian Ulang (Acak Soal Baru)", type="primary", use_container_width=True):
+        if st.button("🔄 Ganti Karakter & Ujian Ulang", type="primary", use_container_width=True):
             st.session_state.skor = 0
             st.session_state.no_soal = 0
+            st.session_state.nama_pemain = ""
+            st.session_state.karakter_pilihan = None
             st.session_state.status_jawab = None
             st.session_state.soal_acak = random.sample(daftar_hewan, len(daftar_hewan))
             st.rerun()
