@@ -4,7 +4,7 @@ import random
 
 st.set_page_config(page_title="RareFauna Quiz Indonesia", page_icon="🇮🇩", layout="centered")
 
-# Database 10 Hewan Endemik Indonesia
+# Database 10 Hewan Endemik Indonesia (Menggunakan Emoji yang Pasti Muncul & Aman)
 daftar_hewan = [
     {"nama": "komodo", "kategori": "Reptil Purba / NTT", "ikon": "🦖🏝️", "clues": ["✨ Clue 1: Reptil terbesar di dunia.", "🇮🇩 Clue 2: Air liur beracun.", "🏝️ Clue 3: Endemik NTT."], "fakta": "Komodo adalah kadal terbesar di bumi yang panjangnya bisa mencapai 3 meter!"},
     {"nama": "orangutan", "kategori": "Primata / Sumatera & Kalimantan", "ikon": "🦧🌴", "clues": ["✨ Clue 1: Berarti 'manusia hutan'.", "🟠 Clue 2: Berbulu jingga.", "🌴 Clue 3: Hidup di atas pohon."], "fakta": "Orangutan sangat cerdas dan mampu menggunakan alat."},
@@ -28,9 +28,9 @@ if 'soal_acak' not in st.session_state:
 # Halaman Login
 if st.session_state.nama_pemain == "":
     st.title("🇮🇩 KUIS ENDEMIK FAUNA INDONESIA 🇮🇩")
-    st.write("Selamat datang di Ekspedisi Nusantara!")
-    nama = st.text_input("Siapa nama panggilanmu, Explorer?")
-    if st.button("🚀 Mulai Ekspedisi!", use_container_width=True):
+    st.write("Selamat datang di Ujian Sidang Ekspedisi Nusantara!")
+    nama = st.text_input("Siapa nama lengkap/panggilan calon Sarjana Hewan?")
+    if st.button("🚀 Mulai Ujian Ekspedisi!", use_container_width=True):
         if nama:
             st.session_state.nama_pemain = nama
             st.session_state.soal_acak = random.sample(daftar_hewan, len(daftar_hewan))
@@ -38,16 +38,17 @@ if st.session_state.nama_pemain == "":
         else:
             st.warning("Tulis namamu dulu ya!")
 else:
-    # Sidebar
+    # Sidebar dengan Link Audio Stabil
     with st.sidebar:
-        st.header(f"Halo, {st.session_state.nama_pemain}! 🇮🇩")
+        st.header(f"Explorer: {st.session_state.nama_pemain} 🇮🇩")
         st.metric("Skor Sementara", f"{st.session_state.skor} Poin")
         st.progress(st.session_state.no_soal / len(st.session_state.soal_acak))
         st.caption(f"Soal {st.session_state.no_soal + 1} dari {len(st.session_state.soal_acak)}")
         
         st.divider()
         st.subheader("🎵 Backsound Alam")
-        st.audio("https://actions.google.com/sounds/v1/ambiences/forest_birds.ogg", format="audio/ogg")
+        # Menggunakan tautan audio alternatif yang sangat stabil dan langsung bisa diputar
+        st.audio("https://upload.wikimedia.org/wikipedia/commons/b/b3/Enchanted_Forest_Ambient.ogg", format="audio/ogg")
 
     # Ambil soal berdasarkan urutan acak
     if st.session_state.no_soal < len(st.session_state.soal_acak):
@@ -56,6 +57,7 @@ else:
         st.title(f"Soal No. {st.session_state.no_soal + 1}")
         st.subheader(f"Kategori: {h['kategori']}")
         
+        # Tampilan Ikon Emoji Rapi & Cepat
         st.markdown(f"<h1 style='text-align: center; font-size: 90px;'>{h['ikon']}</h1>", unsafe_allow_html=True)
         st.info("💡 Analisis wilayah dan ikon di atas, lalu buka petunjuk jika diperlukan!")
         st.divider()
@@ -87,19 +89,21 @@ else:
                 time.sleep(1.8)
                 st.rerun()
     else:
-        # Halaman Selesai & Museum Mini
+        # Halaman Selesai & Museum Mini dengan Gelar Kustom
         st.balloons()
-        st.success("🎉 SELAMAT! EKSPEDISI NUSANTARA SELESAI 🎉")
-        st.header(f"Kerja Hebat, {st.session_state.nama_pemain}!")
-        st.metric("Total Skormu", f"{st.session_state.skor} / 100 Poin")
+        st.success("🎉 SELAMAT! UJIAN & EKSPEDISI NUSANTARA SELESAI 🎉")
+        st.header(f"Sidang Kelulusan: {st.session_state.nama_pemain}")
+        st.metric("Total Nilai Akhir", f"{st.session_state.skor} / 100 Poin")
         
-        # Sistem Gelar
+        # Sistem Gelar Kustom Sesuai Permintaanmu
         if st.session_state.skor >= 90:
-            st.markdown("🏆 **Gelar:** Ahli Zoologi Nusantara Sejati (Luar Biasa!)")
+            st.markdown("🎓 **Gelar Kelulusan:** `S.Hwn` — **Predikat: Luar Biasa!** 🏆")
         elif st.session_state.skor >= 60:
-            st.markdown("🥈 **Gelar:** Penjelajah Margasatwa Indonesia (Hebat!)")
+            st.markdown("📜 **Gelar Kelulusan:** `S.k` — **Predikat: Hebat!** 🥈")
+        elif st.session_state.skor >= 30:
+            st.markdown("🥉 **Gelar Kelulusan:** `S.Tda` — **Predikat: Cukup**")
         else:
-            st.markdown("🥉 **Gelar:** Pengamat Alam Pemula (Bagus, ayo coba lagi!)")
+            st.markdown("🤦‍♂️ **Gelar Kelulusan:** `ADOHHHHH, heran` — **Ayo Ujian Ulang!** 😅")
             
         st.divider()
         st.header("🏛️ Museum Mini Ensiklopedia Fauna Indonesia")
@@ -111,7 +115,7 @@ else:
                 st.write(f"**Fakta Unik:** {item['fakta']}")
                 
         st.divider()
-        if st.button("🔄 Main Lagi (Soal Diacak)", use_container_width=True):
+        if st.button("🔄 Ujian Ulang (Soal Diacak)", use_container_width=True):
             st.session_state.skor = 0
             st.session_state.no_soal = 0
             st.session_state.soal_acak = random.sample(daftar_hewan, len(daftar_hewan))
