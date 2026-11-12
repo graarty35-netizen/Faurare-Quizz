@@ -69,9 +69,12 @@ hewan_langka = [
 ]
 
 # 2. Pengaturan Memori Sesi (Session State)
-if 'skor' not in st.session_state: st.session_state.skor = 0
-if 'no_soal' not in st.session_state: st.session_state.no_soal = 0
-if 'nama_pemain' not in st.session_state: st.session_state.nama_pemain = ""
+if 'skor' not in st.session_state:
+    st.session_state.skor = 0
+if 'no_soal' not in st.session_state:
+    st.session_state.no_soal = 0
+if 'nama_pemain' not in st.session_state:
+    st.session_state.nama_pemain = ""
 
 # 3. Halaman Login / Pendaftaran Pemain
 if st.session_state.nama_pemain == "":
@@ -109,9 +112,12 @@ else:
         
         # Fitur Clue Buka-Tutup Interaktif
         st.write("🔍 **Buka petunjuk di bawah ini jika kamu butuh bantuan:**")
-        with st.expander("✨ Buka Clue 1"): st.info(hewan['clues'][0])
-        with st.expander("🌸 Buka Clue 2"): st.info(hewan['clues'][1])
-        with st.expander("🗺️ Buka Clue 3 (Paling Spesifik)"): st.info(hewan['clues'][2])
+        with st.expander("✨ Buka Clue 1"):
+            st.info(hewan['clues'][0])
+        with st.expander("🌸 Buka Clue 2"):
+            st.info(hewan['clues'][1])
+        with st.expander("🗺️ Buka Clue 3 (Paling Spesifik)"):
+            st.info(hewan['clues'][2])
         
         jawaban = st.text_input("Ketik tebakan nama hewan di sini:", key=f"jawab_{st.session_state.no_soal}")
         
@@ -142,4 +148,28 @@ else:
         st.subheader(f"Total Skormu: {st.session_state.skor} dari 100 Poin")
         
         # Sistem Penilaian Gelar / Badge Explorer
-        if st.
+        if st.session_state.skor >= 90:
+            st.markdown("### 🏆 Gelar: **Master Fauna Nusantara & Dunia** (Luar Biasa!)")
+        elif st.session_state.skor >= 60:
+            st.markdown("### 🥈 Gelar: **Penjelajah Alam Senior** (Hebat & Berwawasan!)")
+        elif st.session_state.skor >= 30:
+            st.markdown("### 🥉 Gelar: **Pengamat Margasatwa Pemula** (Bagus!)")
+        else:
+            st.markdown("### 🧭 Gelar: **Turis Hutan Tersesat** (Ayo coba lagi!)")
+            
+        st.divider()
+        st.header("🏛️ Galeri Museum Mini (Ensiklopedia Hewan Langka)")
+        st.write("Kenali lebih dekat 10 hewan langka yang sudah kamu temui di kuis ini:")
+        
+        # Tampilkan Ensiklopedia Lengkap di Akhir
+        for idx, item in enumerate(hewan_langka):
+            with st.expander(f"🐾 {idx+1}. {item['nama'].capitalize()} ({item['kategori']})"):
+                st.write(f"**Fakta Unik:** {item['fakta']}")
+                st.markdown(f"*Clue Utama:* {item['clues'][2]}")
+        
+        st.divider()
+        if st.button("Main Lagi dari Awal", use_container_width=True):
+            st.session_state.skor = 0
+            st.session_state.no_soal = 0
+            st.session_state.nama_pemain = ""
+            st.rerun()
