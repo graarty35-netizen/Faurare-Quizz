@@ -38,7 +38,7 @@ if st.session_state.nama_pemain == "":
         else:
             st.warning("Tulis namamu dulu ya!")
 else:
-    # Sidebar dengan Audio player HTML agar tombol Play/Pause responsif di perangkat seluler/iPad
+    # Sidebar dengan Audio Format MP3 yang Stabil dan Langsung Muncul Durasi Menitnya
     with st.sidebar:
         st.header(f"Explorer: {st.session_state.nama_pemain} 🇮🇩")
         st.metric("Skor Sementara", f"{st.session_state.skor} Poin")
@@ -47,11 +47,10 @@ else:
         
         st.divider()
         st.subheader("🎵 Backsound Alam")
-        # Menggunakan pemutar audio HTML bawaan agar tombol play langsung bisa diklik di Safari/HP
         st.markdown("""
-            <audio controls loop style="width: 100%;">
-                <source src="https://actions.google.com/sounds/v1/ambiences/forest_birds.ogg" type="audio/ogg">
-                Browser kamu tidak Mendukung pemutar audio.
+            <audio controls loop preload="auto" style="width: 100%;">
+                <source src="https://cdn.pixabay.com/download/audio/2022/05/16/audio_db32c41793.mp3?filename=forest-with-birds-and-wind-111158.mp3" type="audio/mpeg">
+                Browser kamu tidak mendukung pemutar audio.
             </audio>
         """, unsafe_allow_html=True)
 
@@ -114,13 +113,4 @@ else:
         st.write("Pelajari kembali fakta unik dari ke-10 hewan endemik:")
         
         for i, item in enumerate(daftar_hewan):
-            with st.expander(f"🇮🇩 {i+1}. {item['nama'].capitalize()} ({item['kategori']})"):
-                st.markdown(f"### {item['ikon']}")
-                st.write(f"**Fakta Unik:** {item['fakta']}")
-                
-        st.divider()
-        if st.button("🔄 Ujian Ulang (Soal Diacak)", use_container_width=True):
-            st.session_state.skor = 0
-            st.session_state.no_soal = 0
-            st.session_state.soal_acak = random.sample(daftar_hewan, len(daftar_hewan))
-            st.rerun()
+            with st.expander(f"🇮🇩 {i
