@@ -79,9 +79,12 @@ hewan_langka = [
 ]
 
 # 2. Pengaturan Memori Sesi
-if 'skor' not in st.session_state: st.session_state.skor = 0
-if 'no_soal' not in st.session_state: st.session_state.no_soal = 0
-if 'nama_pemain' not in st.session_state: st.session_state.nama_pemain = ""
+if 'skor' not in st.session_state:
+    st.session_state.skor = 0
+if 'no_soal' not in st.session_state:
+    st.session_state.no_soal = 0
+if 'nama_pemain' not in st.session_state:
+    st.session_state.nama_pemain = ""
 
 # 3. Halaman Login
 if st.session_state.nama_pemain == "":
@@ -107,32 +110,4 @@ else:
         st.write("Progres Ekspedisi:")
         progress_bar = st.session_state.no_soal / len(hewan_langka)
         st.progress(progress_bar)
-        st.caption(f"Soal ke-{st.session_state.no_soal + 1} dari {len(hewan_langka)}")
-        
-        st.divider()
-        st.subheader("🎵 Backsound Suasana Alam")
-        st.audio("https://actions.google.com/sounds/v1/ambiences/forest_birds.ogg", format="audio/ogg")
-
-    # --- KONTEN SOAL ---
-    if st.session_state.no_soal < len(hewan_langka):
-        hewan = hewan_langka[st.session_state.no_soal]
-        
-        st.title(f"Soal No. {st.session_state.no_soal + 1}")
-        st.subheader(f"Kategori: {hewan['kategori']}")
-        
-        # Kotak Visual Ikon Emoji Hewan
-        st.markdown(f"<h1 style='text-align: center; font-size: 80px;'>{hewan['ikon']}</h1>", unsafe_allow_html=True)
-        st.info("👆 Perhatikan kategori wilayah dan ikon di atas, lalu buka clue di bawah jika butuh petunjuk!")
-        st.divider()
-        
-        # Fitur Clue Buka-Tutup
-        st.write("🔍 **Buka petunjuk di bawah ini:**")
-        with st.expander("✨ Buka Clue 1"): st.write(hewan['clues'][0])
-        with st.expander("🇮🇩 Buka Clue 2"): st.write(hewan['clues'][1])
-        with st.expander("🗺️ Buka Clue 3 (Paling Spesifik)"): st.write(hewan['clues'][2])
-        
-        jawaban = st.text_input("Ketik tebakan nama hewan di sini (huruf kecil):", key=f"jawab_{st.session_state.no_soal}")
-        
-        kolom1, kolom2 = st.columns(2)
-        with kolom1:
-            if
+        st.
