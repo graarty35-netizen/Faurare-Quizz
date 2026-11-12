@@ -456,4 +456,153 @@ with st.sidebar:
     st.metric("Skor Sementara", f"{st.session_state.skor} Poin")
     kemajuan = min(st.session_state.no_soal / TOTAL_SOAL, 1.0)
     st.progress(kemajuan)
-    st.caption(f"Soal {min(st.session_state.no_soal + 1, TOTAL_SOAL)} dari {TO
+    st.caption(f"Soal {min(st.session_state.no_soal + 1, TOTAL_SOAL)} dari {TOTAL_SOAL}")
+
+    st.divider()
+    st.subheader("🎵 Backsound Alam")
+    tampilkan_backsound()
+    st.caption("Tekan ▶ untuk memutar. Di HP/iPad, browser butuh satu sentuhan dulu.")
+
+    st.divider()
+    if st.button("🔄 Mulai Ulang Kuis", use_container_width=True):
+        mulai_ulang()
+        st.rerun()
+
+
+# ─────────────────────────────────────────────────────────────
+# PERMAINAN
+# ─────────────────────────────────────────────────────────────
+if st.session_state.no_soal < TOTAL_SOAL:
+    h = st.session_state.soal_acak[st.session_state.no_soal]
+    nomor = st.session_state.no_soal + 1
+
+    # Kartu indeks visual
+    if h.get("gambar"):
+        kartu_visual = f"<img src='{html.escape(h['gambar'])}' style='max-width:100%; border-radius:16px; margin:10px 0;'>"
+    else:
+        kartu_visual = f"<span class='ikon-besar'>{h['ikon']}</span>"
+
+    st.markdown(
+        f"""
+        <div class="glass kartu-hewan animasi">
+            <span class="ikon-latar">{h['latar']}</span>
+            <div class="nomor">Soal {nomor} / {TOTAL_SOAL}</div>
+            <span class="lencana">📍 {html.escape(h['kategori'])}</span>
+            {kartu_visual}
+            <div class="tanya">Hewan endemik apakah ini?</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ── Setelah menjawab benar / menyerah: tampilkan fakta + tombol lanjut
+    if st.session_state.status in ("benar", "lewat"):
+        terakhir = nomor == TOTAL_SOAL
+        if st.session_state.status == "benar":
+            st.markdown(
+                f"""
+                <div class="glass hasil-benar animasi">
+                    <h3 style="margin:0 0 6px 0;">✅ Jawaban Benar! +{POIN_PER_SOAL} poin</h3>
+                    <b>🐾 {html.escape(h['nama'].title())}</b><br>
+                    <span>💡 <b>Fakta Unik:</b> {html.escape(h['fakta'])}</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                f"""
+                <div class="glass hasil-lewat animasi">
+                    <h3 style="margin:0 0 6px 0;">🏳️ Tidak apa-apa, kita belajar!</h3>
+                    <b>🐾 Jawabannya: {html.escape(h['nama'].title())}</b><br>
+                    <span>💡 <b>Fakta Unik:</b> {html.escape(h['fakta'])}</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        label = "🏁 Lihat Hasil Akhir" if terakhir else "➡️ Lanjut ke Soal Berikutnya"
+        if st.button(label, use_container_width=True, type="primary"):
+            st.session_state.status = None
+            st.session_state.clue_buka = 0
+            st.session_state.salah_kali = 0
+            st.session_state.no_soal += 1
+            if terakhir:
+                mainkan_sfx("selesai")
+            st.rerun()
+
+    # ── Masih menebak
+    else:
+        # Petunjuk bertahap
+        for i in range(st.session_state.clue_buka):
+            st.markdown(
+                f"<div class='clue'><b>💡 Petunjuk {i + 1}:</b> {html.escape(h['clues'][i])}</div>",
+                unsafe_allow_html=True,
+            )
+        if st.session_state.clue_buka < len(h["clues"]):
+            sisa = len(h["clues"]) - st.session_state.clue_buka
+            if st.button(f"💡 Buka Petunjuk Berikutnya ({sisa} tersisa)", use_container_width=True):
+                st.session_state.clue_buka += 1
+                st.rerun()
+
+        # Form jawaban (Enter = kirim, nyaman di HP)
+        with st.form(key=f"form_{st.session_state.no_soal}", clear_on_submit=True):
+            jawaban = st.text_input("Ketik tebakan nama hewan:", placeholder="contoh: komodo")
+            kirim = st.form_submit_button("🎯 Kirim Jawaban", use_container_width=True)
+
+        if kirim:
+            if not jawaban.strip():
+                st.warning("Ketik jawabanmu dulu ya!")
+            elif cek_jawaban(jawaban, h):
+                st.session_state.skor += POIN_PER_SOAL
+                st.session_state.status = "benar"
+                mainkan_sfx("benar")
+                st.rerun()
+            else:
+                st.session_state.salah_kali += 1
+                mainkan_sfx("salah")
+                saran = " Coba buka petunjuk di atas!" if st.session_state.clue_buka < len(h["clues"]) else ""
+                st.error(f"❌ Kurang tepat (percobaan salah: {st.session_state.salah_kali}).{saran}")
+
+        if st.button("🏳️ Menyerah & Lewati", use_container_width=True):
+            st.session_state.status = "lewat"
+            mainkan_sfx("lewat")
+            st.rerun()
+
+# ─────────────────────────────────────────────────────────────
+# HALAMAN HASIL AKHIR
+# ─────────────────────────────────────────────────────────────
+else:
+    skor = st.session_state.skor
+    gelar, predikat, ikon_gelar = gelar_dari_skor(skor)
+    st.balloons()
+
+    st.markdown(
+        f"""
+        <div class="glass animasi" style="text-align:center;">
+            <div class="subjudul">🎉 Ujian &amp; Ekspedisi Nusantara Selesai 🎉</div>
+            <h2 style="margin:0;">Sidang Kelulusan: {nama_aman}</h2>
+            <div style="font-size:3rem; margin-top:8px;">{ikon_gelar}</div>
+            <div class="gelar">{html.escape(gelar)}</div>
+            <div style="font-weight:600;">{html.escape(predikat)}</div>
+            <div style="margin-top:12px; font-size:1.2rem;">
+                Total Nilai Akhir: <b>{skor} / {SKOR_MAKS}</b> poin
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("### 🏛️ Museum Mini Ensiklopedia Fauna Indonesia")
+    st.caption(f"Pelajari kembali fakta unik dari ke-{TOTAL_SOAL} hewan endemik:")
+    for i, item in enumerate(daftar_hewan, start=1):
+        with st.expander(f"{item['ikon']} {i}. {item['nama'].title()} — {item['kategori']}"):
+            st.write(f"**Fakta Unik:** {item['fakta']}")
+            for c in item["clues"]:
+                st.write(f"• {c}")
+
+    st.divider()
+    if st.button("🔄 Ujian Ulang (Soal Diacak)", use_container_width=True, type="primary"):
+        mulai_ulang()
+        st.rerun()
+
+render_sfx()
