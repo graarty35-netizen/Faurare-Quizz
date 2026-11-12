@@ -1,7 +1,6 @@
 import streamlit as st
 import time
 
-# Konfigurasi Halaman Web
 st.set_page_config(page_title="RareFauna Quiz Indonesia", page_icon="🇮🇩", layout="centered")
 
 # Database 10 Hewan Endemik Indonesia
@@ -18,98 +17,36 @@ hewan_langka = [
     {"nama": "jalak bali", "kategori": "Burung / Bali", "ikon": "🕊️🌺", "clues": ["✨ Clue 1: Bulu putih bersih bermata biru.", "🌸 Clue 2: Memiliki jambul indah.", "🏝️ Clue 3: Maskot fauna resmi Bali."], "fakta": "Jalak bali termasuk burung paling dilindungi di dunia."}
 ]
 
-# Inisialisasi Session State
 if 'skor' not in st.session_state: st.session_state.skor = 0
 if 'no_soal' not in st.session_state: st.session_state.no_soal = 0
 if 'nama_pemain' not in st.session_state: st.session_state.nama_pemain = ""
 
-# Halaman Login / Pendaftaran Pemain
 if st.session_state.nama_pemain == "":
-    st.markdown("<h1 style='text-align: center; font-size: 2.2rem;'>🇮🇩 KUIS ENDEMIK FAUNA INDONESIA 🇮🇩</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; opacity: 0.8;'>Jelajahi kekayaan dan keunikan satwa langka nusantara!</p>", unsafe_allow_html=True)
-    st.divider()
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        nama = st.text_input("Siapa nama panggilanmu, Explorer?")
-        if st.button("🚀 Mulai Ekspedisi", use_container_width=True):
-            if nama:
-                st.session_state.nama_pemain = nama
-                st.rerun()
-            else:
-                st.warning("Tulis namamu dulu ya sebelum mulai!")
+    st.title("🇮🇩 KUIS ENDEMIK FAUNA INDONESIA 🇮🇩")
+    st.write("Selamat datang di Ekspedisi Nusantara!")
+    nama = st.text_input("Siapa nama panggilanmu, Explorer?")
+    if st.button("Mulai Ekspedisi!", use_container_width=True):
+        if nama:
+            st.session_state.nama_pemain = nama
+            st.rerun()
+        else:
+            st.warning("Tulis namamu dulu ya!")
 else:
-    # Sidebar Modern dengan Tema Visual
     with st.sidebar:
         st.header(f"Halo, {st.session_state.nama_pemain}! 🇮🇩")
-        st.metric("Skor Sementara", f"{st.session_state.skor} Poin")
-        st.write("Progres Ekspedisi:")
+        st.metric("Skor", f"{st.session_state.skor} Poin")
         st.progress(st.session_state.no_soal / len(hewan_langka))
-        st.caption(f"Soal {st.session_state.no_soal + 1} dari {len(hewan_langka)}")
-        
-        st.divider()
-        st.subheader("🎵 Backsound Alam")
         st.audio("https://actions.google.com/sounds/v1/ambiences/forest_birds.ogg", format="audio/ogg")
 
-    # Konten Kuis Utama
     if st.session_state.no_soal < len(hewan_langka):
         h = hewan_langka[st.session_state.no_soal]
+        st.title(f"Soal No. {st.session_state.no_soal + 1}")
+        st.subheader(f"Kategori: {h['kategori']}")
         
-        st.markdown(f"### 📍 Soal No. {st.session_state.no_soal + 1}")
-        st.caption(f"Kategori Wilayah: **{h['kategori']}**")
-        
-        # UI Kotak Kartu Emoji Bergaya Modern (Glassmorphism)
-        st.markdown(f"""
-        <div style='background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px); padding: 25px; border-radius: 20px; text-align: center; border: 1px solid rgba(255, 255, 255, 0.15); margin-bottom: 20px;'>
-            <span style='font-size: 85px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));'>{h['ikon']}</span>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.write("🔍 **Butuh petunjuk? Buka clue di bawah ini:**")
-        with st.expander("✨ Buka Clue 1"): st.info(h['clues'][0])
-        with st.expander("🇮🇩 Buka Clue 2"): st.info(h['clues'][1])
-        with st.expander("🗺️ Buka Clue 3 (Spesifik)"): st.info(h['clues'][2])
-        
-        jawaban = st.text_input("Ketik tebakan nama hewan:", key=f"j_{st.session_state.no_soal}")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Kirim Jawaban", use_container_width=True):
-                user_ans = jawaban.lower().strip()
-                if user_ans == h['nama']:
-                    st.success(f"✅ BENAR! Jawabannya adalah **{h['nama'].capitalize()}**.")
-                    st.session_state.skor += 10
-                    st.session_state.no_soal += 1
-                    time.sleep(1)
-                    st.rerun()
-                else:
-                    st.error("❌ Kurang tepat! Coba cek clue kembali.")
-        with col2:
-            if st.button("Nyerah & Lewati 🏳️", use_container_width=True):
-                st.warning(f"Sayang sekali! Jawabannya adalah **{h['nama'].capitalize()}**.")
-                st.session_state.no_soal += 1
-                time.sleep(1.5)
-                st.rerun()
-    else:
-        # Halaman Selesai & Museum Mini Estetik
-        st.balloons()
-        st.success("🎉 SELAMAT! EKSPEDISI NUSANTARA SELESAI 🎉")
-        st.markdown(f"### Kerja hebat, **{st.session_state.nama_pemain}**!")
-        st.metric("Total Skor Akhir", f"{st.session_state.skor} / 100 Poin")
-        
-        # Sistem Badge Gelar Eksklusif
-        if st.session_state.skor >= 90:
-            st.markdown("🏆 **Gelar:** Ahli Zoologi Nusantara Sejati (Luar Biasa!)")
-        elif st.session_state.skor >= 60:
-            st.markdown("🥈 **Gelar:** Penjelajah Margasatwa Indonesia (Hebat!)")
-        else:
-            st.markdown("🥉 **Gelar:** Pengamat Alam Pemula (Bagus, terus belajar!)")
-            
+        # Tampilan Emoji Rapi Tanpa Error HTML
+        st.markdown(f"# {h['ikon']}")
         st.divider()
-        st.header("🏛️ Museum Mini Ensiklopedia Fauna Indonesia")
-        st.write("Pelajari kembali fakta unik dari ke-10 hewan endemik ini:")
         
-        for i, item in enumerate(hewan_langka):
-            with st.expander(f"🇮🇩 {i+1}. {item['nama'].capitalize()} ({item['kategori']})"):
-                st.markdown(f"### {item['ikon']}")
-                st.
+        with st.expander("✨ Buka Clue 1"): st.write(h['clues'][0])
+        with st.expander("🇮🇩 Buka Clue 2"): st.write(h['clues'][1])
+        with st.expander("🗺️ Buka Clue 3"): st.write(
