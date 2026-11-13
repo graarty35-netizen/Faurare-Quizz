@@ -23,6 +23,8 @@ st.set_page_config(
 POIN_PER_SOAL = 10
 BONUS_CRITTER = 5        # poin per Pixel Critter yang ditemukan
 JUMLAH_CRITTER = 3       # berapa soal yang disembuni critter
+MAX_NYAWA = 3            # jumlah nyawa (hati) per permainan
+OFFSET_FOTO = 12.6       # detik: foto bersama baru muncul setelah adegan penangkapan pelaku
 
 # ─────────────────────────────────────────────────────────────
 # DATABASE HEWAN
@@ -362,6 +364,10 @@ PAL_PEMBAKAR = {"H": "#4b5563", "h": "#111827", "S": "#fcd9b6", "E": "#111827", 
                 "C": "#374151", "c": "#111827", "W": "#6b7280", "P": "#0f172a", "B": "#000000"}
 
 
+PAL_PENYEL = {"H": "#a16207", "h": "#713f12", "S": "#fcd9b6", "E": "#111827", "m": "#b45309",
+              "C": "#4d7c0f", "c": "#365314", "W": "#a3a3a3", "P": "#57534e", "B": "#1c1917"}
+
+
 def pokeball_svg(warna: str = "#ef4444", ukuran: int = 26) -> str:
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="{ukuran}" height="{ukuran}">'
             '<circle cx="10" cy="10" r="9" fill="#f8fafc" stroke="#0f172a" stroke-width="1.4"/>'
@@ -635,57 +641,83 @@ h1, h2, h3, .gelar, .nomor, .nama-profil { font-family: 'Fredoka', sans-serif !i
 @keyframes gelPop { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes emoNaik { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-34px); opacity: 0; } }
 
-/* ── Ending tambahan: ancaman kebakaran hutan, aparat datang ── */
-.adegan.api { height: 190px; animation: apiBuka 0.7s ease 7.4s both; }
+/* ── Ending bagian 1: pembakar hutan & penyelundup satwa ditangkap sang penjelajah ── */
+.adegan.api { height: 190px; animation: apiBuka 0.6s ease 0.1s both, apiTutup 0.7s ease 12.4s forwards; }
 .api .lapis { animation: none !important; height: 110px; background-size: 275px 110px; }
 .api .merah {
     position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0;
-    background: radial-gradient(circle at 60% 95%, rgba(239, 68, 68, 0.85), transparent 70%);
-    animation: merahMaster 14s linear 7.6s both;
+    background: radial-gradient(circle at 62% 95%, rgba(239, 68, 68, 0.85), transparent 70%);
+    animation: merahMaster 12s linear 0.4s both;
 }
 .api .cap {
     position: absolute; top: 10px; left: 0; right: 0; padding: 0 8px; text-align: center; z-index: 6; opacity: 0;
     font-weight: 600; font-size: 0.85rem; color: #fff; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
 }
-.api .capA { animation: capA 14s linear 7.6s both; }
-.api .capB { animation: capB 14s linear 7.6s both; }
-.api .capC { opacity: 1; animation: capC 14s linear 7.6s both; }
-.api .api-api { position: absolute; bottom: 13px; z-index: 3; opacity: 0; transform-origin: 50% 100%; animation: apiMaster 14s linear 7.6s both; }
+.api .capA { animation: capA 12s linear 0.4s both; }
+.api .capB { animation: capB 12s linear 0.4s both; }
+.api .capC { opacity: 1; animation: capC 12s linear 0.4s both; }
+.api .api-api { position: absolute; bottom: 13px; z-index: 3; opacity: 0; transform-origin: 50% 100%; animation: flameMaster 12s linear 0.4s both; }
 .api .api-b { transform-origin: 50% 100%; animation: apiKedip 0.35s steps(2, end) infinite alternate; }
-.api .api-b svg, .api .obor svg { display: block; image-rendering: pixelated; }
-.api .org, .api .pembakar { position: absolute; bottom: 9px; width: 52px; height: 65px; z-index: 4; }
+.api .api-b svg, .api .obor svg, .api .sangkar svg, .api .sb-b svg { display: block; image-rendering: pixelated; }
+.api .org, .api .hero { position: absolute; bottom: 9px; width: 52px; height: 65px; z-index: 4; }
 .api .org-b { position: relative; width: 52px; height: 65px; animation: pantul 0.36s steps(2, end) infinite; }
 .api .org-b svg { position: absolute; left: 0; bottom: 0; image-rendering: pixelated; }
 .api .org-b .k1 { animation: kaki1 0.36s steps(1, end) infinite; }
 .api .org-b .k2 { animation: kaki2 0.36s steps(1, end) infinite; }
-.api .pembakar { left: 112%; animation: pembakarX 14s linear 7.6s both; }
-.api .polisi { left: 66%; animation: polisiX 14s linear 7.6s both; }
-.api .pemadam { left: 30%; animation: pemadamX 14s linear 7.6s both; }
-.api .obor { position: absolute; left: -12px; bottom: 26px; opacity: 0; animation: oborJatuh 14s linear 7.6s both; }
+.api .flip { transform: scaleX(-1); }
+.api .pembakar { left: 42%; animation: pbX 12s linear 0.4s both; }
+.api .penyel { left: 18%; animation: pyX 12s linear 0.4s both; }
+.api .hero { left: 58%; animation: heroX 12s linear 0.4s both, heroHop 12s linear 0.4s both; }
+.api .obor { position: absolute; left: -12px; bottom: 26px; opacity: 0; animation: oborJatuh 12s linear 0.4s both; }
 .api .obor .gagang { display: block; width: 4px; height: 14px; margin: 0 auto; background: #92400e; }
+.api .sangkar {
+    position: absolute; left: 46px; bottom: 6px; width: 32px; height: 28px; border: 2px solid #d1d5db; border-radius: 4px 4px 0 0;
+    background: repeating-linear-gradient(90deg, transparent 0 5px, rgba(209, 213, 219, 0.85) 5px 7px);
+    display: flex; align-items: flex-end; justify-content: center;
+}
+.api .sangkar .isi { animation: isiHilang 12s linear 0.4s both; opacity: 0; }
+.api .satwa-bebas { position: absolute; bottom: 14px; left: 49%; z-index: 3; animation: bebas 12s linear 0.4s both; }
+.api .sb-b { animation: pantul 0.36s steps(2, end) infinite; }
 .api .balon {
     position: absolute; left: -10px; bottom: 74px; padding: 5px 8px; background: #fff; color: #000; border: 3px solid #000;
-    white-space: nowrap; font-family: 'Press Start 2P', monospace; font-size: 0.5rem; opacity: 0;
-    animation: ampun 14s linear 7.6s both;
+    white-space: nowrap; font-family: 'Press Start 2P', monospace; font-size: 0.5rem; opacity: 0; animation: ampun2 12s linear 0.4s both;
 }
-.api .semprot {
-    position: absolute; left: calc(30% + 44px); width: 24%; bottom: 40px; height: 8px; z-index: 3; opacity: 0; border-radius: 4px;
-    transform-origin: left center; background: repeating-linear-gradient(90deg, #60a5fa 0 7px, #bfdbfe 7px 11px, transparent 11px 16px);
-    animation: semprot 14s linear 7.6s both;
+.api .balon.bh { left: 4px; animation: balonHero 12s linear 0.4s both; }
+.api .tanda {
+    position: absolute; left: 20px; bottom: 74px; font-family: 'Press Start 2P', monospace; font-size: 1rem; color: #fde047;
+    text-shadow: 2px 2px 0 #000; opacity: 0; animation: tanda 12s linear 0.4s both;
 }
 @keyframes apiBuka { from { height: 0; opacity: 0; margin-bottom: 0; } to { height: 190px; opacity: 1; margin-bottom: 16px; } }
+@keyframes apiTutup { from { height: 190px; opacity: 1; margin-bottom: 16px; } to { height: 0; opacity: 0; margin-bottom: 0; } }
+@keyframes panggungBuka { from { height: 0; opacity: 0; margin-bottom: 0; } to { height: 262px; opacity: 1; margin-bottom: 16px; } }
 @keyframes apiKedip { from { transform: scaleY(1); } to { transform: scaleY(0.86) scaleX(1.06); } }
-@keyframes apiMaster { 0%, 11% { opacity: 0; transform: scaleY(0); } 14%, 38% { opacity: 1; transform: scaleY(1); } 46%, 100% { opacity: 0; transform: scaleY(0); } }
-@keyframes merahMaster { 0%, 9% { opacity: 0; } 14%, 38% { opacity: 0.38; } 46%, 100% { opacity: 0; } }
-@keyframes capA { 0% { opacity: 0; } 1%, 15% { opacity: 1; } 17%, 100% { opacity: 0; } }
-@keyframes capB { 0%, 17% { opacity: 0; } 19%, 43% { opacity: 1; } 45%, 100% { opacity: 0; } }
-@keyframes capC { 0%, 45% { opacity: 0; } 48%, 100% { opacity: 1; } }
-@keyframes pembakarX { 0% { left: 106%; } 8%, 66% { left: 78%; } 84%, 100% { left: 112%; } }
-@keyframes polisiX { 0%, 17% { left: -25%; } 30%, 66% { left: 42%; } 84%, 100% { left: 66%; } }
-@keyframes pemadamX { 0%, 17% { left: -15%; } 29%, 100% { left: 30%; } }
-@keyframes oborJatuh { 0%, 30% { opacity: 1; transform: none; } 38%, 100% { opacity: 0; transform: translateY(34px) rotate(80deg); } }
-@keyframes ampun { 0%, 30% { opacity: 0; } 32%, 58% { opacity: 1; } 60%, 100% { opacity: 0; } }
-@keyframes semprot { 0%, 28% { opacity: 0; transform: scaleX(0); } 30% { opacity: 1; transform: scaleX(0); } 36%, 43% { opacity: 1; transform: scaleX(1); } 47%, 100% { opacity: 0; transform: scaleX(1); } }
+@keyframes flameMaster { 0%, 15% { opacity: 0; transform: scaleY(0); } 19%, 58% { opacity: 1; transform: scaleY(1); } 66%, 100% { opacity: 0; transform: scaleY(0); } }
+@keyframes merahMaster { 0%, 13% { opacity: 0; } 18%, 58% { opacity: 0.4; } 66%, 100% { opacity: 0; } }
+@keyframes capA { 0% { opacity: 0; } 1%, 17% { opacity: 1; } 19%, 100% { opacity: 0; } }
+@keyframes capB { 0%, 20% { opacity: 0; } 22%, 48% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes capC { 0%, 50% { opacity: 0; } 53%, 100% { opacity: 1; } }
+@keyframes pbX { 0% { left: -22%; } 14%, 100% { left: 42%; } }
+@keyframes pyX { 0% { left: -40%; } 14%, 100% { left: 18%; } }
+@keyframes heroX { 0%, 24% { left: 84%; } 52%, 100% { left: 58%; } }
+@keyframes heroHop { 0%, 22% { transform: translateY(0); } 25% { transform: translateY(-22px); } 28%, 100% { transform: translateY(0); } }
+@keyframes tanda { 0%, 20% { opacity: 0; } 22%, 34% { opacity: 1; } 36%, 100% { opacity: 0; } }
+@keyframes balonHero { 0%, 36% { opacity: 0; } 38%, 52% { opacity: 1; } 54%, 100% { opacity: 0; } }
+@keyframes ampun2 { 0%, 53% { opacity: 0; } 55%, 75% { opacity: 1; } 77%, 100% { opacity: 0; } }
+@keyframes oborJatuh { 0%, 50% { opacity: 1; transform: none; } 58%, 100% { opacity: 0; transform: translateY(34px) rotate(80deg); } }
+@keyframes isiHilang { 0%, 62% { opacity: 1; } 64%, 100% { opacity: 0; } }
+@keyframes bebas { 0%, 62% { left: calc(18% + 48px); opacity: 0; } 63% { left: calc(18% + 48px); opacity: 1; } 76%, 100% { left: 49%; opacity: 1; } }
+
+/* ── Nyawa (hati) + vignette layar sekarat ── */
+.nyawa { font-size: 0.95rem; letter-spacing: 3px; line-height: 1.3; margin-top: 2px; }
+.element-container:has(.vignette), [data-testid="stElementContainer"]:has(.vignette) { position: absolute; height: 0; width: 0; overflow: visible; }
+.vignette { position: fixed; inset: 0; z-index: 9980; pointer-events: none; }
+.vignette.v1 { background: radial-gradient(ellipse at center, transparent 62%, rgba(127, 0, 0, 0.38) 100%); }
+.vignette.v2 { background: radial-gradient(ellipse at center, transparent 45%, rgba(150, 0, 0, 0.55) 82%, rgba(25, 0, 0, 0.8) 100%); animation: denyutMerah 2.4s ease-in-out infinite; }
+.vignette.v3 { background: radial-gradient(ellipse at center, transparent 25%, rgba(170, 0, 0, 0.7) 65%, rgba(0, 0, 0, 0.93) 100%); animation: denyutMerah 1.3s ease-in-out infinite; }
+.kena-flash { position: fixed; inset: 0; z-index: 9985; pointer-events: none; background: rgba(220, 0, 0, 0.45); animation: kenaFlash 0.7s ease-out forwards; }
+@keyframes denyutMerah { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+@keyframes kenaFlash { from { opacity: 1; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .kena-flash { display: none; } }
 
 /* ── Kotak notifikasi & peringatan: HITAM PEKAT + teks PUTIH (termasuk toast Pixel Critter) ── */
 [data-testid="stToast"], [data-testid="stToast"] > div {
@@ -895,7 +927,7 @@ iframe[height="0"] { display: none; }
 @media (prefers-reduced-motion: reduce) {
     .ikon-besar, .ikon-latar, .animasi, .clue, .pelari, .pelari svg, .lapis, .tanah::after,
     .reaksi span, .salah-baris .emo, .hasil-salah, .transisi *, .adegan *, .panggung *,
-    .ikut, .ikut-b, .buru, .buru-b, .st-key-start button,
+    .ikut, .ikut-b, .buru, .buru-b, .st-key-start button, .vignette,
     .st-key-critter button, html.rf-disco .stApp::before, html.rf-disco .stApp::after,
     html.rf-disco body::before, html.rf-disco .glass, html.rf-disco .judul-museum { animation: none !important; }
     .adegan .ikut.baru { opacity: 1; }
@@ -914,7 +946,7 @@ st.markdown(f"<style>{CSS}</style>", unsafe_allow_html=True)
 # Isinya: efek suara, musik latar tegang, tombol musik, pemicu Secret Disco,
 # unlock audio pada gesture pertama, dan tombol Enter untuk PRESS START.
 # ─────────────────────────────────────────────────────────────
-VERSI_ENGINE = "5"
+VERSI_ENGINE = "6"
 
 ENGINE_JS = """
 (function() {
@@ -973,6 +1005,8 @@ ENGINE_JS = """
   W.__rfSfx = function(jenis) {
     if (jenis === 'klik')    { nada(660, 0, 0.08, 'triangle', 0.10); }
     if (jenis === 'lompat')  { nada(420, 0, 0.08, 'square', 0.08); nada(840, 0.07, 0.12, 'square', 0.08); }
+    if (jenis === 'luka')    { nada(196, 0, 0.15, 'sawtooth', 0.10); nada(147, 0.14, 0.15, 'sawtooth', 0.10); nada(98, 0.28, 0.35, 'sawtooth', 0.12); }
+    if (jenis === 'fanfare') { [523, 659, 784, 1047, 784, 1047, 1319].forEach(function(f, i) { nada(f, i * 0.12, 0.3, 'triangle', 0.18); }); }
     if (jenis === 'sirine')  { for (var q = 0; q < 4; q++) { nada(660, q * 0.5, 0.24, 'square', 0.05); nada(880, q * 0.5 + 0.25, 0.24, 'square', 0.05); } }
     if (jenis === 'benar')   { [523, 659, 784, 1047].forEach(function(f, i) { nada(f, i * 0.09, 0.22, 'triangle', 0.18); }); }
     if (jenis === 'salah')   { nada(220, 0, 0.18, 'sawtooth', 0.10); nada(150, 0.16, 0.3, 'sawtooth', 0.10); }
@@ -982,9 +1016,10 @@ ENGINE_JS = """
     if (jenis === 'disko')   { [523, 659, 784, 659, 784, 1047].forEach(function(f, i) { nada(f, i * 0.08, 0.14, 'sawtooth', 0.08); }); }
     if (jenis === 'foto')    { nada(1800, 0, 0.04, 'square', 0.10); nada(900, 0.06, 0.07, 'square', 0.08); }
     if (jenis === 'selesai') {
-      [523, 659, 784, 1047, 784, 1047, 1319].forEach(function(f, i) { nada(f, i * 0.12, 0.3, 'triangle', 0.18); });
-      W.setTimeout(function() { W.__rfSfx('foto'); }, 6000);
-      W.setTimeout(function() { W.__rfSfx('sirine'); }, 10000);
+      W.setTimeout(function() { W.__rfSfx('sirine'); }, 2800);
+      W.setTimeout(function() { W.__rfSfx('benar'); }, 7600);
+      W.setTimeout(function() { W.__rfSfx('fanfare'); }, 12700);
+      W.setTimeout(function() { W.__rfSfx('foto'); }, 18700);
     }
   };
 
@@ -1060,6 +1095,7 @@ ENGINE_JS = """
   // ── Karakter pixel bisa diklik: lompat + dialog
   var DIALOG = ['Aduh susahnya...', 'Hmm, hewan apa ya?', 'Buka petunjuk dong!', 'Aku pasti bisa!',
                 'Perutku lapar...', 'Ayo semangat!', 'Kakiku pegal...', 'Hampir ketemu!', 'La la la ~'];
+  var DIALOG_SAKIT = ['Aduh sakit...', 'Nyawaku tinggal sedikit!', 'Jangan salah lagi!', 'Pusing...', 'Tolong dong...'];
   var PIKSEL = ['♥', '★', '?!', '♪', '!!', '✦'];
   W.__rfPelari = function(pel) {
     var adg = pel.closest('.adegan'); if (!adg) return;
@@ -1067,7 +1103,9 @@ ENGINE_JS = """
     W.setTimeout(function() { pel.classList.remove('lompat'); }, 700);
     var lama = adg.querySelector('.gelembung'); if (lama && lama.parentNode) lama.parentNode.removeChild(lama);
     var g = D.createElement('div'); g.className = 'gelembung';
-    g.textContent = DIALOG[Math.floor(Math.random() * DIALOG.length)];
+    var sakit = D.querySelector('.vignette.v2, .vignette.v3');
+    var daftar = sakit ? DIALOG_SAKIT : DIALOG;
+    g.textContent = daftar[Math.floor(Math.random() * daftar.length)];
     adg.appendChild(g);
     g.style.left = Math.max(6, Math.min(pel.offsetLeft - 10, adg.clientWidth - g.offsetWidth - 6)) + 'px';
     var p = D.createElement('div'); p.className = 'piksel-emo';
@@ -1262,17 +1300,17 @@ def adegan_kejar(kunci: str) -> str:
     """)
 
 
-def adegan_ending(kunci: str, tertangkap) -> str:
+def adegan_ending(kunci: str, tertangkap, offset: float = 0.0) -> str:
     """
     Pelepasan satwa (bola terbuka satu per satu) lalu foto bersama berbaris rapi.
     HANYA hewan yang berhasil ditangkap (jawaban benar) yang muncul di sini.
     """
     info = KARAKTER[kunci]
-    jeda_foto = 6.0
+    jeda_foto = 6.0 + offset
     daftar = list(tertangkap)
 
     def slot(i: int, h: dict) -> str:
-        d = f"{0.6 + i * 0.45:.2f}s"
+        d = f"{0.6 + i * 0.45 + offset:.2f}s"
         bola = pokeball_svg(info["bola"], 20)
         return (f'<div class="slot"><span class="bola-s" style="animation-delay:{d}">{bola}</span>'
                 f'<span class="sat" style="animation-delay:{d}">{hewan_svg(h, 36)}</span></div>')
@@ -1296,7 +1334,7 @@ def adegan_ending(kunci: str, tertangkap) -> str:
         cap2 = "📸 Foto sendirian dulu, coba lagi ya!"
 
     return rapat(f"""
-        <div class="adegan panggung">
+        <div class="adegan panggung" style="animation:panggungBuka 0.7s ease {offset}s both">
             <div class="bulan"></div>
             <div class="lapis jauh"></div>
             <div class="lapis dekat"></div>
@@ -1320,15 +1358,22 @@ def rintangan_html() -> str:
     )
 
 
-def adegan_api() -> str:
-    """Ending tambahan (muncul setelah foto bersama): pembakar hutan dicegah petugas."""
-    def orang(pal):
-        return (f'<div class="org-b">{sprite_svg("red", 52, 0, "k1", pal)}'
-                f'{sprite_svg("red", 52, 1, "k2", pal)}</div>')
+def adegan_api(kunci: str, tertangkap) -> str:
+    """
+    Ending bagian 1 (sebelum foto): oknum nakal + temannya (penjual satwa) datang dari kiri,
+    pohon-pohon terbakar; sang penjelajah melihat, mengejar, lalu menangkap keduanya.
+    """
+    def orang(pal=None):
+        return (f'<div class="org-b">{sprite_svg(kunci, 52, 0, "k1", pal)}'
+                f'{sprite_svg(kunci, 52, 1, "k2", pal)}</div>')
 
+    h_sel = HEWAN_BY_NAMA[tertangkap[0]] if tertangkap else HEWAN_BY_NAMA["jalak bali"]
     api = "".join(
         f'<div class="api-api" style="left:{x}%"><div class="api-b">{grid_svg(GRID_API, PALET_API, 34)}</div></div>'
-        for x in (50, 58, 66)
+        for x in (52, 60, 68, 76)
+    ) + "".join(
+        f'<div class="api-api" style="left:{x}%;bottom:56px"><div class="api-b">{grid_svg(GRID_API, PALET_API, 22)}</div></div>'
+        for x in (56, 64, 72)
     )
     return rapat(f"""
         <div class="adegan api">
@@ -1337,17 +1382,23 @@ def adegan_api() -> str:
             <div class="lapis dekat"></div>
             <div class="tanah"></div>
             <div class="merah"></div>
-            <div class="cap capA">🔥 Awas! Ada yang mencoba membakar hutan…</div>
-            <div class="cap capB">🚨 Petugas tiba! Api dipadamkan, pelaku dicegah!</div>
-            <div class="cap capC">🌲 Hutan aman berkat penjaga alam!</div>
+            <div class="cap capA">🔥 Oknum nakal mau membakar hutan &amp; menjual satwa!</div>
+            <div class="cap capB">👀 Sang penjelajah melihatnya… beraksi!</div>
+            <div class="cap capC">🚨 Kedua pelaku tertangkap! Api padam, satwa selamat!</div>
             {api}
-            <div class="pemadam org">{orang(PAL_PEMADAM)}</div>
-            <div class="semprot"></div>
-            <div class="polisi org">{orang(PAL_POLISI)}</div>
-            <div class="pembakar">
-                {orang(PAL_PEMBAKAR)}
+            <div class="penyel org">{orang(PAL_PENYEL)}
+                <div class="sangkar"><div class="isi">{hewan_svg(h_sel, 22)}</div></div>
+                <div class="balon">Ampun!</div>
+            </div>
+            <div class="pembakar org">{orang(PAL_PEMBAKAR)}
                 <div class="obor">{grid_svg(GRID_API, PALET_API, 16)}<i class="gagang"></i></div>
                 <div class="balon">Ampun!</div>
+            </div>
+            <div class="satwa-bebas"><div class="sb-b">{hewan_svg(h_sel, 40)}</div></div>
+            <div class="hero">
+                <div class="flip">{orang()}</div>
+                <div class="tanda">!</div>
+                <div class="balon bh">Berhenti!</div>
             </div>
         </div>
     """)
@@ -1357,12 +1408,13 @@ def bar_profil() -> str:
     kunci = st.session_state.karakter
     info = KARAKTER[kunci]
     nomor = min(st.session_state.no_soal + 1, TOTAL_SOAL)
+    jantung = "".join("❤️" if i < st.session_state.nyawa else "🖤" for i in range(MAX_NYAWA))
     return rapat(f"""
         <div class="profil animasi">
             <div class="ava">{sprite_svg(kunci, 34, 1)}</div>
             <div class="info">
                 <div class="nama-profil">{html.escape(st.session_state.nama_pemain)}</div>
-                <div class="meta">{pokeball_svg(info['bola'], 16)} {info['nama']} · Soal {nomor}/{TOTAL_SOAL} · 🐾 {len(st.session_state.tertangkap)}</div>
+                <div class="meta">{pokeball_svg(info['bola'], 16)} {info['nama']} · Soal {nomor}/{TOTAL_SOAL} · 🐾 {len(st.session_state.tertangkap)}</div><div class="nyawa">{jantung}</div>
             </div>
             <div class="skor">⭐ {total_poin()}</div>
         </div>
@@ -1374,7 +1426,8 @@ def mulai_ulang():
     st.session_state.skor = 0
     st.session_state.bonus = 0
     st.session_state.no_soal = 0
-    st.session_state.status = None          # None | "benar" | "lewat"
+    st.session_state.status = None          # None | "benar" | "lewat" | "habis"
+    st.session_state.nyawa = MAX_NYAWA
     st.session_state.clue_buka = 0
     st.session_state.salah_kali = 0
     st.session_state.emoji = "😄"
@@ -1472,6 +1525,7 @@ if st.session_state.nama_pemain == "":
 3. Jawaban benar = **+{POIN_PER_SOAL} poin**, hewannya tertangkap dan **ikut berbaris di belakangmu**.
 4. Soal selalu **diacak**: {TOTAL_SOAL} soal, skor maksimal {SKOR_MAKS}.
 5. Di akhir, hanya hewan yang **berhasil kamu tangkap** yang ikut berfoto bersamamu.
+6. Kamu punya **3 nyawa ❤️**: salah menjawab = nyawa berkurang dan layar makin gelap kemerahan. Nyawa habis = ekspedisi berakhir.
 
 🎓 **Gelar:** 90–100 `S.Hwn` · 60–80 `S.k` · 30–50 `S.Tda` · di bawah 30 `ADOHHHHH, heran`
 """
@@ -1515,7 +1569,11 @@ if st.session_state.no_soal < TOTAL_SOAL:
     h = st.session_state.soal_acak[st.session_state.no_soal]
     nomor = st.session_state.no_soal + 1
     status = st.session_state.status
-    mode_adegan = {None: "loop", "benar": "tangkap", "lewat": "kabur"}[status]
+    mode_adegan = {None: "loop", "benar": "tangkap", "lewat": "kabur", "habis": "kabur"}[status]
+    hilang = max(0, MAX_NYAWA - st.session_state.nyawa)
+    kena = st.session_state.pop("baru_kena", False)
+    st.markdown(f'<div class="vignette v{hilang}"></div>' + ('<div class="kena-flash"></div>' if kena else ""),
+                unsafe_allow_html=True)
 
     st.markdown(bar_profil(), unsafe_allow_html=True)
     st.markdown(adegan(st.session_state.karakter, h, mode_adegan, st.session_state.tertangkap),
@@ -1552,7 +1610,7 @@ if st.session_state.no_soal < TOTAL_SOAL:
     )
 
     # ── Setelah menjawab benar / menyerah: reaksi + fakta + tombol lanjut
-    if status in ("benar", "lewat"):
+    if status in ("benar", "lewat", "habis"):
         terakhir = nomor == TOTAL_SOAL
         nama_hewan = html.escape(h["nama"].title())
         fakta = html.escape(h["fakta"])
@@ -1570,7 +1628,7 @@ if st.session_state.no_soal < TOTAL_SOAL:
                 """),
                 unsafe_allow_html=True,
             )
-        else:
+        elif status == "lewat":
             st.markdown(
                 rapat(f"""
                 <div class="glass hasil-lewat animasi">
@@ -1582,13 +1640,25 @@ if st.session_state.no_soal < TOTAL_SOAL:
                 """),
                 unsafe_allow_html=True,
             )
-        label = "🏁 Lihat Hasil Akhir" if terakhir else "➡️ Lanjut ke Soal Berikutnya"
+        if status == "habis":
+            st.markdown(
+                rapat(f"""
+                <div class="glass hasil-salah animasi">
+                    <div class="reaksi"><span>💔</span></div>
+                    <h3 style="margin:0 0 6px 0; text-align:center;">Nyawa habis! Ekspedisi berakhir</h3>
+                    <b>🐾 Jawabannya: {nama_hewan}</b><br>
+                    <span>💡 <b>Fakta Unik:</b> {fakta}</span>
+                </div>
+                """),
+                unsafe_allow_html=True,
+            )
+        label = "🏁 Lihat Hasil Akhir" if (terakhir or status == "habis") else "➡️ Lanjut ke Soal Berikutnya"
         if st.button(label, use_container_width=True, type="primary"):
             st.session_state.status = None
             st.session_state.clue_buka = 0
             st.session_state.salah_kali = 0
-            st.session_state.no_soal += 1
-            if terakhir:
+            st.session_state.no_soal = TOTAL_SOAL if status == "habis" else st.session_state.no_soal + 1
+            if terakhir or status == "habis":
                 mainkan_sfx("selesai")
             st.rerun()
 
@@ -1623,20 +1693,30 @@ if st.session_state.no_soal < TOTAL_SOAL:
                 st.rerun()
             else:
                 st.session_state.salah_kali += 1
-                mainkan_sfx("salah")
-                saran = "Coba buka petunjuk di atas!" if st.session_state.clue_buka < len(h["clues"]) else "Baca petunjuknya sekali lagi."
-                st.markdown(
-                    rapat(f"""
-                    <div class="glass hasil-salah">
-                        <div class="salah-baris">
-                            <span class="emo">{random.choice(EMOJI_SALAH)}</span>
-                            <div><b>Yah, belum tepat!</b> (salah: {st.session_state.salah_kali})<br>
-                            <span style="opacity:0.85;">{saran}</span></div>
-                        </div>
+                st.session_state.nyawa -= 1
+                st.session_state.baru_kena = True
+                mainkan_sfx("luka")
+                if st.session_state.nyawa <= 0:
+                    st.session_state.status = "habis"
+                else:
+                    st.session_state.salah_info = random.choice(EMOJI_SALAH)
+                st.rerun()
+
+        info_salah = st.session_state.pop("salah_info", None)
+        if info_salah:
+            saran = "Coba buka petunjuk di atas!" if st.session_state.clue_buka < len(h["clues"]) else "Baca petunjuknya sekali lagi."
+            st.markdown(
+                rapat(f"""
+                <div class="glass hasil-salah">
+                    <div class="salah-baris">
+                        <span class="emo">{info_salah}</span>
+                        <div><b>Yah, belum tepat!</b> Nyawa berkurang 💔 (sisa {st.session_state.nyawa} dari {MAX_NYAWA})<br>
+                        <span style="opacity:0.85;">{saran}</span></div>
                     </div>
-                    """),
-                    unsafe_allow_html=True,
-                )
+                </div>
+                """),
+                unsafe_allow_html=True,
+            )
 
         if st.button("🏳️ Menyerah & Lewati", use_container_width=True):
             st.session_state.status = "lewat"
@@ -1659,9 +1739,8 @@ else:
         st.balloons()
 
     # Scene ending: pelepasan satwa → foto bersama (hanya hewan yang tertangkap)
-    st.markdown(adegan_ending(kunci, tangkapan), unsafe_allow_html=True)
-    # Ending tambahan: ancaman kebakaran hutan (muncul setelah foto bersama)
-    st.markdown(adegan_api(), unsafe_allow_html=True)
+    st.markdown(adegan_api(kunci, st.session_state.tertangkap), unsafe_allow_html=True)
+    st.markdown(adegan_ending(kunci, tangkapan, OFFSET_FOTO), unsafe_allow_html=True)
 
     rincian = (f"<div style='opacity:0.8; font-size:0.85rem;'>🐾 {len(tangkapan)} / {TOTAL_SOAL} satwa tertangkap"
                + (f" · {skor} poin soal + {bonus} bonus 🐹" if bonus else "") + "</div>")
