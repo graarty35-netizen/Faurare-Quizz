@@ -1,5 +1,6 @@
 import html
 import json
+import math
 import random
 import re
 import time
@@ -23,7 +24,9 @@ st.set_page_config(
 POIN_PER_SOAL = 10
 BONUS_CRITTER = 5        # poin per Pixel Critter yang ditemukan
 JUMLAH_CRITTER = 3       # berapa soal yang disembuni critter
-MAX_NYAWA = 3            # jumlah nyawa (hati) per permainan
+MAX_NYAWA = 3            # jumlah hati penuh per permainan
+BIAYA_SALAH = 1.0        # nyawa yang hilang saat salah menjawab
+BIAYA_LEWAT = 1.5        # nyawa yang hilang saat menekan "Menyerah & Lewati"
 OFFSET_FOTO = 12.6       # detik: foto bersama baru muncul setelah adegan penangkapan pelaku
 
 # ─────────────────────────────────────────────────────────────
@@ -376,6 +379,43 @@ def pokeball_svg(warna: str = "#ef4444", ukuran: int = 26) -> str:
             '<circle cx="10" cy="10" r="3" fill="#f8fafc" stroke="#0f172a" stroke-width="1.4"/></svg>')
 
 
+# ── Hati pixel art untuk nyawa (penuh / setengah / kosong)
+GRID_HATI = [
+    ".rr...rr.",
+    "rwrr.rrrr",
+    "rrrrrrrrr",
+    "rrrrrrrrr",
+    ".rrrrrrr.",
+    "..rrrrr..",
+    "...rrr...",
+    "....r....",
+]
+PALET_HATI = {"r": "#ef4444", "w": "#fecaca", "e": "#3b4252"}
+
+
+def hati_svg(isi: float, lebar: int = 18) -> str:
+    """isi: 1 = hati penuh, 0.5 = setengah (sisi kiri), 0 = kosong."""
+    baris = []
+    for row in GRID_HATI:
+        out = ""
+        for x, ch in enumerate(row):
+            if ch in "rw" and (isi <= 0 or (isi < 1 and x > 4)):
+                ch = "e"
+            out += ch
+        baris.append(out)
+    return grid_svg(baris, PALET_HATI, lebar, "hati")
+
+
+def nyawa_html() -> str:
+    n = st.session_state.nyawa
+    return "".join(hati_svg(1 if n - i >= 1 else 0.5 if n - i >= 0.5 else 0)
+                   for i in range(MAX_NYAWA))
+
+
+def fmt_nyawa(n: float) -> str:
+    return str(int(n)) if n == int(n) else str(n).replace(".", ",")
+
+
 def uri_critter() -> str:
     svg = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 8" shape-rendering="crispEdges">'
            + grid_ke_rects(CRITTER_GRID, CRITTER_PALET) + "</svg>")
@@ -707,8 +747,9 @@ h1, h2, h3, .gelar, .nomor, .nama-profil { font-family: 'Fredoka', sans-serif !i
 @keyframes isiHilang { 0%, 62% { opacity: 1; } 64%, 100% { opacity: 0; } }
 @keyframes bebas { 0%, 62% { left: calc(18% + 48px); opacity: 0; } 63% { left: calc(18% + 48px); opacity: 1; } 76%, 100% { left: 49%; opacity: 1; } }
 
-/* ── Nyawa (hati) + vignette layar sekarat ── */
-.nyawa { font-size: 0.95rem; letter-spacing: 3px; line-height: 1.3; margin-top: 2px; }
+/* ── Nyawa (hati pixel) + vignette layar sekarat ── */
+.nyawa { display: flex; gap: 3px; margin-top: 3px; }
+.nyawa svg { display: block; image-rendering: pixelated; }
 .element-container:has(.vignette), [data-testid="stElementContainer"]:has(.vignette) { position: absolute; height: 0; width: 0; overflow: visible; }
 .vignette { position: fixed; inset: 0; z-index: 9980; pointer-events: none; }
 .vignette.v1 { background: radial-gradient(ellipse at center, transparent 62%, rgba(127, 0, 0, 0.38) 100%); }
@@ -1408,13 +1449,13 @@ def bar_profil() -> str:
     kunci = st.session_state.karakter
     info = KARAKTER[kunci]
     nomor = min(st.session_state.no_soal + 1, TOTAL_SOAL)
-    jantung = "".join("❤️" if i < st.session_state.nyawa else "🖤" for i in range(MAX_NYAWA))
     return rapat(f"""
         <div class="profil animasi">
             <div class="ava">{sprite_svg(kunci, 34, 1)}</div>
             <div class="info">
                 <div class="nama-profil">{html.escape(st.session_state.nama_pemain)}</div>
-                <div class="meta">{pokeball_svg(info['bola'], 16)} {info['nama']} · Soal {nomor}/{TOTAL_SOAL} · 🐾 {len(st.session_state.tertangkap)}</div><div class="nyawa">{jantung}</div>
+                <div class="meta">{pokeball_svg(info['bola'], 16)} {info['nama']} · Soal {nomor}/{TOTAL_SOAL} · 🐾 {len(st.session_state.tertangkap)}</div>
+                <div class="nyawa">{nyawa_html()}</div>
             </div>
             <div class="skor">⭐ {total_poin()}</div>
         </div>
@@ -1427,7 +1468,7 @@ def mulai_ulang():
     st.session_state.bonus = 0
     st.session_state.no_soal = 0
     st.session_state.status = None          # None | "benar" | "lewat" | "habis"
-    st.session_state.nyawa = MAX_NYAWA
+    st.session_state.nyawa = float(MAX_NYAWA)
     st.session_state.clue_buka = 0
     st.session_state.salah_kali = 0
     st.session_state.emoji = "😄"
@@ -1525,7 +1566,7 @@ if st.session_state.nama_pemain == "":
 3. Jawaban benar = **+{POIN_PER_SOAL} poin**, hewannya tertangkap dan **ikut berbaris di belakangmu**.
 4. Soal selalu **diacak**: {TOTAL_SOAL} soal, skor maksimal {SKOR_MAKS}.
 5. Di akhir, hanya hewan yang **berhasil kamu tangkap** yang ikut berfoto bersamamu.
-6. Kamu punya **3 nyawa ❤️**: salah menjawab = nyawa berkurang dan layar makin gelap kemerahan. Nyawa habis = ekspedisi berakhir.
+6. Kamu punya **{MAX_NYAWA} nyawa (hati pixel)**: salah menjawab = **-{fmt_nyawa(BIAYA_SALAH)}** nyawa, **Menyerah & Lewati = -{fmt_nyawa(BIAYA_LEWAT)}** nyawa. Makin sedikit nyawa, layar makin gelap kemerahan. Nyawa habis = ekspedisi berakhir.
 
 🎓 **Gelar:** 90–100 `S.Hwn` · 60–80 `S.k` · 30–50 `S.Tda` · di bawah 30 `ADOHHHHH, heran`
 """
@@ -1570,7 +1611,8 @@ if st.session_state.no_soal < TOTAL_SOAL:
     nomor = st.session_state.no_soal + 1
     status = st.session_state.status
     mode_adegan = {None: "loop", "benar": "tangkap", "lewat": "kabur", "habis": "kabur"}[status]
-    hilang = max(0, MAX_NYAWA - st.session_state.nyawa)
+    # Tingkat kerusakan layar 0..3 (1,5 nyawa hilang -> level 2; 2,5 hilang -> level 3)
+    hilang = min(3, math.ceil(max(0.0, MAX_NYAWA - st.session_state.nyawa)))
     kena = st.session_state.pop("baru_kena", False)
     st.markdown(f'<div class="vignette v{hilang}"></div>' + ('<div class="kena-flash"></div>' if kena else ""),
                 unsafe_allow_html=True)
@@ -1634,6 +1676,9 @@ if st.session_state.no_soal < TOTAL_SOAL:
                 <div class="glass hasil-lewat animasi">
                     <div class="reaksi"><span>😿</span></div>
                     <h3 style="margin:0 0 6px 0; text-align:center;">Tidak apa-apa, kita belajar!</h3>
+                    <div style="text-align:center; font-size:0.85rem; opacity:0.85; margin-bottom:6px;">
+                        💔 -{fmt_nyawa(BIAYA_LEWAT)} nyawa (sisa {fmt_nyawa(st.session_state.nyawa)} dari {MAX_NYAWA})
+                    </div>
                     <b>🐾 Jawabannya: {nama_hewan}</b><br>
                     <span>💡 <b>Fakta Unik:</b> {fakta}</span>
                 </div>
@@ -1686,14 +1731,14 @@ if st.session_state.no_soal < TOTAL_SOAL:
                 st.session_state.skor += POIN_PER_SOAL
                 st.session_state.status = "benar"
                 st.session_state.emoji = random.choice(EMOJI_BENAR)
-                # Hewan tertangkap → ikut berbaris & ikut foto bersama di ending
+                # Hewan tertangkap (masuk Pokéball) hanya setelah jawaban benar
                 if h["nama"] not in st.session_state.tertangkap:
                     st.session_state.tertangkap.append(h["nama"])
                 mainkan_sfx("benar")
                 st.rerun()
             else:
                 st.session_state.salah_kali += 1
-                st.session_state.nyawa -= 1
+                st.session_state.nyawa -= BIAYA_SALAH
                 st.session_state.baru_kena = True
                 mainkan_sfx("luka")
                 if st.session_state.nyawa <= 0:
@@ -1710,7 +1755,7 @@ if st.session_state.no_soal < TOTAL_SOAL:
                 <div class="glass hasil-salah">
                     <div class="salah-baris">
                         <span class="emo">{info_salah}</span>
-                        <div><b>Yah, belum tepat!</b> Nyawa berkurang 💔 (sisa {st.session_state.nyawa} dari {MAX_NYAWA})<br>
+                        <div><b>Yah, belum tepat!</b> Nyawa berkurang 💔 (sisa {fmt_nyawa(st.session_state.nyawa)} dari {MAX_NYAWA})<br>
                         <span style="opacity:0.85;">{saran}</span></div>
                     </div>
                 </div>
@@ -1718,9 +1763,15 @@ if st.session_state.no_soal < TOTAL_SOAL:
                 unsafe_allow_html=True,
             )
 
-        if st.button("🏳️ Menyerah & Lewati", use_container_width=True):
-            st.session_state.status = "lewat"
-            mainkan_sfx("lewat")
+        if st.button(f"🏳️ Menyerah & Lewati (-{fmt_nyawa(BIAYA_LEWAT)} nyawa)", use_container_width=True):
+            st.session_state.nyawa -= BIAYA_LEWAT
+            st.session_state.baru_kena = True
+            if st.session_state.nyawa <= 0:
+                st.session_state.status = "habis"
+                mainkan_sfx("luka")
+            else:
+                st.session_state.status = "lewat"
+                mainkan_sfx("lewat")
             st.rerun()
 
 # ─────────────────────────────────────────────────────────────
@@ -1738,7 +1789,7 @@ else:
         st.session_state.balon = True
         st.balloons()
 
-    # Scene ending: pelepasan satwa → foto bersama (hanya hewan yang tertangkap)
+    # Scene ending: penangkapan pembakar hutan & penjual satwa → pelepasan satwa + foto bersama
     st.markdown(adegan_api(kunci, st.session_state.tertangkap), unsafe_allow_html=True)
     st.markdown(adegan_ending(kunci, tangkapan, OFFSET_FOTO), unsafe_allow_html=True)
 
