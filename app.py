@@ -314,12 +314,12 @@ def grid_ke_rects(baris, palet) -> str:
     return "".join(rects)
 
 
-def sprite_svg(kunci: str, lebar: int = 56, frame: int = 0, kelas: str = "") -> str:
+def sprite_svg(kunci: str, lebar: int = 56, frame: int = 0, kelas: str = "", palet=None) -> str:
     baris = SPRITE_BADAN + SPRITE_KAKI[frame]
     tinggi = round(lebar * len(baris) / 12)
     return (f'<svg class="{kelas}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 {len(baris)}" '
             f'width="{lebar}" height="{tinggi}" shape-rendering="crispEdges">'
-            f'{grid_ke_rects(baris, KARAKTER[kunci]["palet"])}</svg>')
+            f'{grid_ke_rects(baris, palet or KARAKTER[kunci]["palet"])}</svg>')
 
 
 def hewan_svg(h: dict, lebar: int = 44, kelas: str = "") -> str:
@@ -331,6 +331,35 @@ def hewan_svg(h: dict, lebar: int = 44, kelas: str = "") -> str:
     return (f'<svg class="{kelas}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {lbr} {len(baris)}" '
             f'width="{lebar}" height="{tinggi}" shape-rendering="crispEdges">'
             f'{grid_ke_rects(baris, palet)}</svg>')
+
+
+def grid_svg(grid, palet, lebar: int = 32, kelas: str = "") -> str:
+    lbr = max(len(r) for r in grid)
+    baris = [r.ljust(lbr, ".") for r in grid]
+    tinggi = round(lebar * len(baris) / lbr)
+    return (f'<svg class="{kelas}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {lbr} {len(baris)}" '
+            f'width="{lebar}" height="{tinggi}" shape-rendering="crispEdges">'
+            f'{grid_ke_rects(baris, palet)}</svg>')
+
+
+# Rintangan di jalur lemparan Pokéball
+GRID_BATANG = ["..bbbbbbbb..", "rrbbbbbbbbrr", "rdbbbbbbbbdr", ".dddddddddd."]
+PALET_BATANG = {"b": "#92400e", "d": "#451a03", "r": "#d6a56b"}
+GRID_BATU = ["..gggg..", ".ggGGggg", "ggggggdd", "gdddddd."]
+PALET_BATU = {"g": "#9ca3af", "G": "#d1d5db", "d": "#6b7280"}
+
+# Api (ending kebakaran hutan)
+GRID_API = ["...y....", "...yy...", "..yyo...", ".yyooy..", ".yooory.", "yoorrooy",
+            "orrrrrro", "orrrrrro", ".orrrro.", "..oooo.."]
+PALET_API = {"y": "#fde047", "o": "#fb923c", "r": "#ef4444"}
+
+# Palet aparat & pembakar (memakai badan sprite karakter yang sama)
+PAL_POLISI = {"H": "#1e3a8a", "h": "#0f1f4a", "S": "#fcd9b6", "E": "#111827", "m": "#b45309",
+              "C": "#3b82f6", "c": "#1d4ed8", "W": "#fde047", "P": "#1e293b", "B": "#111827"}
+PAL_PEMADAM = {"H": "#f59e0b", "h": "#b45309", "S": "#fcd9b6", "E": "#111827", "m": "#b45309",
+               "C": "#ea580c", "c": "#c2410c", "W": "#fef3c7", "P": "#78350f", "B": "#1c1917"}
+PAL_PEMBAKAR = {"H": "#4b5563", "h": "#111827", "S": "#fcd9b6", "E": "#111827", "m": "#b45309",
+                "C": "#374151", "c": "#111827", "W": "#6b7280", "P": "#0f172a", "B": "#000000"}
 
 
 def pokeball_svg(warna: str = "#ef4444", ukuran: int = 26) -> str:
@@ -511,12 +540,16 @@ h1, h2, h3, .gelar, .nomor, .nama-profil { font-family: 'Fredoka', sans-serif !i
 .adegan.loop .lempar { animation: bolaX 6s linear infinite; }
 .adegan.loop .ly { animation: bolaY 6s infinite; }
 .adegan.loop .lr { animation: bolaR 6s linear infinite; }
-.adegan.loop .kilau { animation: kilauLoop 6s ease infinite; }
-@keyframes bolaX { 0%, 34% { left: 43%; opacity: 0; } 35% { left: 43%; opacity: 1; } 48% { left: 73%; opacity: 1; } 93% { left: 73%; opacity: 1; } 97%, 100% { left: 73%; opacity: 0; } }
-@keyframes bolaY { 0%, 35% { transform: translateY(0); animation-timing-function: ease-out; } 41.5% { transform: translateY(-34px); animation-timing-function: ease-in; } 48%, 100% { transform: translateY(12px); } }
-@keyframes bolaR { 0%, 35% { transform: rotate(0deg); } 48% { transform: rotate(720deg); } 52% { transform: rotate(698deg); } 57% { transform: rotate(740deg); } 62% { transform: rotate(706deg); } 67% { transform: rotate(730deg); } 72%, 100% { transform: rotate(720deg); } }
-@keyframes hewanLoop { 0%, 46% { opacity: 1; transform: scale(1); } 49% { opacity: 1; transform: scale(1.1); } 53% { opacity: 0; transform: scale(0.1); } 92% { opacity: 0; transform: scale(0.1); } 97% { opacity: 1; transform: scale(1.25); } 100% { opacity: 1; transform: scale(1); } }
-@keyframes kilauLoop { 0%, 66% { opacity: 0; transform: scale(0.4); } 72% { opacity: 1; transform: scale(1.3); } 82% { opacity: 0; transform: scale(1.6); } 100% { opacity: 0; } }
+.adegan.loop .kilau { display: none; }
+.adegan.loop .miss { animation: missLoop 6s infinite; }
+.adegan.loop .rintangan.log { animation: logGoyang 6s infinite; }
+@keyframes bolaX { 0%, 34% { left: 43%; opacity: 0; } 35% { left: 43%; opacity: 1; } 43% { left: 52%; opacity: 1; } 48% { left: 46%; opacity: 1; } 54% { left: 41%; opacity: 1; } 58%, 100% { left: 41%; opacity: 0; } }
+@keyframes bolaY { 0%, 35% { transform: translateY(0); animation-timing-function: ease-out; } 40% { transform: translateY(-30px); animation-timing-function: ease-in; } 43.5% { transform: translateY(6px); animation-timing-function: ease-out; } 49% { transform: translateY(-16px); animation-timing-function: ease-in; } 54%, 100% { transform: translateY(14px); } }
+@keyframes bolaR { 0%, 35% { transform: rotate(0deg); } 43% { transform: rotate(360deg); } 58%, 100% { transform: rotate(-200deg); } }
+@keyframes hewanLoop { 0%, 40% { transform: translateY(0); } 43% { transform: translateY(-16px); } 47% { transform: translateY(0); } 50% { transform: translateY(-8px); } 54%, 100% { transform: translateY(0); } }
+@keyframes missLoop { 0%, 42% { opacity: 0; } 44%, 56% { opacity: 1; } 60%, 100% { opacity: 0; } }
+@keyframes logGoyang { 0%, 42% { transform: none; } 44% { transform: translateX(3px); } 46% { transform: translateX(-2px); } 48%, 100% { transform: none; } }
+
 
 /* mode tangkap (jawaban benar): sekali jalan, hewan tertangkap lalu ikut berbaris */
 .adegan.tangkap .hewan { animation: hewanOnce 3.2s ease forwards; }
@@ -529,7 +562,7 @@ h1, h2, h3, .gelar, .nomor, .nama-profil { font-family: 'Fredoka', sans-serif !i
 .adegan.tangkap .pelari .k2 { animation: none; opacity: 1; }
 .adegan.tangkap .lapis, .adegan.tangkap .tanah::after { animation-play-state: paused; }
 @keyframes bolaXo { 0% { left: 43%; opacity: 1; } 25%, 100% { left: 73%; opacity: 1; } }
-@keyframes bolaYo { 0% { transform: translateY(0); animation-timing-function: ease-out; } 12% { transform: translateY(-34px); animation-timing-function: ease-in; } 25%, 100% { transform: translateY(12px); } }
+@keyframes bolaYo { 0% { transform: translateY(0); animation-timing-function: ease-out; } 12% { transform: translateY(-62px); animation-timing-function: ease-in; } 25%, 100% { transform: translateY(12px); } }
 @keyframes bolaRo { 0% { transform: rotate(0deg); } 25% { transform: rotate(720deg); } 32% { transform: rotate(698deg); } 40% { transform: rotate(740deg); } 48% { transform: rotate(706deg); } 56% { transform: rotate(730deg); } 62%, 100% { transform: rotate(720deg); } }
 @keyframes hewanOnce { 0%, 22% { opacity: 1; transform: scale(1); } 27%, 100% { opacity: 0; transform: scale(0.1); } }
 @keyframes kilauOnce { 0%, 60% { opacity: 0; transform: scale(0.4); } 68% { opacity: 1; transform: scale(1.3); } 85% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.6); } }
@@ -574,6 +607,96 @@ h1, h2, h3, .gelar, .nomor, .nama-profil { font-family: 'Fredoka', sans-serif !i
 @keyframes capHilang { from { opacity: 1; } to { opacity: 0; } }
 @keyframes capMuncul { from { opacity: 0; } to { opacity: 1; } }
 @keyframes kilatFoto { 0% { opacity: 0; } 12% { opacity: 0.95; } 100% { opacity: 0; } }
+
+/* ── Rintangan di jalur lemparan ── */
+.adegan .rintangan { position: absolute; bottom: 13px; z-index: 3; }
+.adegan .rintangan svg { display: block; image-rendering: pixelated; }
+.adegan .miss {
+    position: absolute; left: 41%; bottom: 66px; z-index: 6; opacity: 0; white-space: nowrap;
+    font-family: 'Press Start 2P', monospace; font-size: 0.5rem; color: #fca5a5; text-shadow: 2px 2px 0 #000;
+}
+
+/* ── Karakter bisa diklik: lompat + gelembung dialog pixel ── */
+.adegan .pelari { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.adegan .pelari.lompat { animation: lompatPelari 0.6s ease-out !important; }
+.adegan .pelari.lompat .k1 { animation: none !important; opacity: 0; display: block; }
+.adegan .pelari.lompat .k2 { animation: none !important; opacity: 1; }
+@keyframes lompatPelari { 0% { transform: translateY(0); } 45% { transform: translateY(-38px); } 100% { transform: translateY(0); } }
+.adegan .gelembung {
+    position: absolute; bottom: 88px; z-index: 8; padding: 6px 9px; background: #ffffff; color: #000000;
+    border: 3px solid #000; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45); white-space: nowrap;
+    font-family: 'Press Start 2P', monospace; font-size: 0.5rem; line-height: 1.6; animation: gelPop 0.25s steps(3, end) both;
+}
+.adegan .gelembung::after { content: ""; position: absolute; left: 22px; bottom: -13px; border: 6px solid transparent; border-top: 8px solid #000; }
+.adegan .piksel-emo {
+    position: absolute; bottom: 80px; z-index: 8; font-family: 'Press Start 2P', monospace; font-size: 0.9rem;
+    color: #fde047; text-shadow: 2px 2px 0 #000; animation: emoNaik 1.2s steps(6, end) forwards;
+}
+@keyframes gelPop { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes emoNaik { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-34px); opacity: 0; } }
+
+/* ── Ending tambahan: ancaman kebakaran hutan, aparat datang ── */
+.adegan.api { height: 190px; animation: apiBuka 0.7s ease 7.4s both; }
+.api .lapis { animation: none !important; height: 110px; background-size: 275px 110px; }
+.api .merah {
+    position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0;
+    background: radial-gradient(circle at 60% 95%, rgba(239, 68, 68, 0.85), transparent 70%);
+    animation: merahMaster 14s linear 7.6s both;
+}
+.api .cap {
+    position: absolute; top: 10px; left: 0; right: 0; padding: 0 8px; text-align: center; z-index: 6; opacity: 0;
+    font-weight: 600; font-size: 0.85rem; color: #fff; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+.api .capA { animation: capA 14s linear 7.6s both; }
+.api .capB { animation: capB 14s linear 7.6s both; }
+.api .capC { opacity: 1; animation: capC 14s linear 7.6s both; }
+.api .api-api { position: absolute; bottom: 13px; z-index: 3; opacity: 0; transform-origin: 50% 100%; animation: apiMaster 14s linear 7.6s both; }
+.api .api-b { transform-origin: 50% 100%; animation: apiKedip 0.35s steps(2, end) infinite alternate; }
+.api .api-b svg, .api .obor svg { display: block; image-rendering: pixelated; }
+.api .org, .api .pembakar { position: absolute; bottom: 9px; width: 52px; height: 65px; z-index: 4; }
+.api .org-b { position: relative; width: 52px; height: 65px; animation: pantul 0.36s steps(2, end) infinite; }
+.api .org-b svg { position: absolute; left: 0; bottom: 0; image-rendering: pixelated; }
+.api .org-b .k1 { animation: kaki1 0.36s steps(1, end) infinite; }
+.api .org-b .k2 { animation: kaki2 0.36s steps(1, end) infinite; }
+.api .pembakar { left: 112%; animation: pembakarX 14s linear 7.6s both; }
+.api .polisi { left: 66%; animation: polisiX 14s linear 7.6s both; }
+.api .pemadam { left: 30%; animation: pemadamX 14s linear 7.6s both; }
+.api .obor { position: absolute; left: -12px; bottom: 26px; opacity: 0; animation: oborJatuh 14s linear 7.6s both; }
+.api .obor .gagang { display: block; width: 4px; height: 14px; margin: 0 auto; background: #92400e; }
+.api .balon {
+    position: absolute; left: -10px; bottom: 74px; padding: 5px 8px; background: #fff; color: #000; border: 3px solid #000;
+    white-space: nowrap; font-family: 'Press Start 2P', monospace; font-size: 0.5rem; opacity: 0;
+    animation: ampun 14s linear 7.6s both;
+}
+.api .semprot {
+    position: absolute; left: calc(30% + 44px); width: 24%; bottom: 40px; height: 8px; z-index: 3; opacity: 0; border-radius: 4px;
+    transform-origin: left center; background: repeating-linear-gradient(90deg, #60a5fa 0 7px, #bfdbfe 7px 11px, transparent 11px 16px);
+    animation: semprot 14s linear 7.6s both;
+}
+@keyframes apiBuka { from { height: 0; opacity: 0; margin-bottom: 0; } to { height: 190px; opacity: 1; margin-bottom: 16px; } }
+@keyframes apiKedip { from { transform: scaleY(1); } to { transform: scaleY(0.86) scaleX(1.06); } }
+@keyframes apiMaster { 0%, 11% { opacity: 0; transform: scaleY(0); } 14%, 38% { opacity: 1; transform: scaleY(1); } 46%, 100% { opacity: 0; transform: scaleY(0); } }
+@keyframes merahMaster { 0%, 9% { opacity: 0; } 14%, 38% { opacity: 0.38; } 46%, 100% { opacity: 0; } }
+@keyframes capA { 0% { opacity: 0; } 1%, 15% { opacity: 1; } 17%, 100% { opacity: 0; } }
+@keyframes capB { 0%, 17% { opacity: 0; } 19%, 43% { opacity: 1; } 45%, 100% { opacity: 0; } }
+@keyframes capC { 0%, 45% { opacity: 0; } 48%, 100% { opacity: 1; } }
+@keyframes pembakarX { 0% { left: 106%; } 8%, 66% { left: 78%; } 84%, 100% { left: 112%; } }
+@keyframes polisiX { 0%, 17% { left: -25%; } 30%, 66% { left: 42%; } 84%, 100% { left: 66%; } }
+@keyframes pemadamX { 0%, 17% { left: -15%; } 29%, 100% { left: 30%; } }
+@keyframes oborJatuh { 0%, 30% { opacity: 1; transform: none; } 38%, 100% { opacity: 0; transform: translateY(34px) rotate(80deg); } }
+@keyframes ampun { 0%, 30% { opacity: 0; } 32%, 58% { opacity: 1; } 60%, 100% { opacity: 0; } }
+@keyframes semprot { 0%, 28% { opacity: 0; transform: scaleX(0); } 30% { opacity: 1; transform: scaleX(0); } 36%, 43% { opacity: 1; transform: scaleX(1); } 47%, 100% { opacity: 0; transform: scaleX(1); } }
+
+/* ── Kotak notifikasi & peringatan: HITAM PEKAT + teks PUTIH (termasuk toast Pixel Critter) ── */
+[data-testid="stToast"], [data-testid="stToast"] > div {
+    background: #000000 !important; border: 1px solid rgba(253, 230, 138, 0.8) !important; border-radius: 12px !important;
+}
+[data-testid="stToast"], [data-testid="stToast"] * { color: #ffffff !important; font-weight: 600; }
+[data-testid="stAlert"] { background: #000000 !important; border: 1px solid rgba(253, 230, 138, 0.7) !important; border-radius: 12px; }
+[data-testid="stAlert"], [data-testid="stAlert"] * { color: #ffffff !important; }
+.stTextInput textarea, .stTextArea textarea, .stNumberInput input {
+    background: #000000 !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;
+}
 
 /* Profil pemain (karakter mendampingi selama kuis) */
 .profil {
@@ -791,7 +914,7 @@ st.markdown(f"<style>{CSS}</style>", unsafe_allow_html=True)
 # Isinya: efek suara, musik latar tegang, tombol musik, pemicu Secret Disco,
 # unlock audio pada gesture pertama, dan tombol Enter untuk PRESS START.
 # ─────────────────────────────────────────────────────────────
-VERSI_ENGINE = "4"
+VERSI_ENGINE = "5"
 
 ENGINE_JS = """
 (function() {
@@ -837,7 +960,7 @@ ENGINE_JS = """
     var d = D.createElement('div');
     d.textContent = teks;
     d.style.cssText = 'position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:100000;padding:8px 16px;' +
-      'border-radius:999px;background:rgba(10,40,30,.88);color:#fff;font:600 14px Poppins,sans-serif;' +
+      'border-radius:999px;background:#000;color:#fff;font:600 14px Poppins,sans-serif;' +
       'border:1px solid rgba(255,255,255,.3);box-shadow:0 6px 20px rgba(0,0,0,.4);white-space:nowrap;';
     D.body.appendChild(d);
     W.setTimeout(function() {
@@ -849,6 +972,8 @@ ENGINE_JS = """
   // ── Efek suara
   W.__rfSfx = function(jenis) {
     if (jenis === 'klik')    { nada(660, 0, 0.08, 'triangle', 0.10); }
+    if (jenis === 'lompat')  { nada(420, 0, 0.08, 'square', 0.08); nada(840, 0.07, 0.12, 'square', 0.08); }
+    if (jenis === 'sirine')  { for (var q = 0; q < 4; q++) { nada(660, q * 0.5, 0.24, 'square', 0.05); nada(880, q * 0.5 + 0.25, 0.24, 'square', 0.05); } }
     if (jenis === 'benar')   { [523, 659, 784, 1047].forEach(function(f, i) { nada(f, i * 0.09, 0.22, 'triangle', 0.18); }); }
     if (jenis === 'salah')   { nada(220, 0, 0.18, 'sawtooth', 0.10); nada(150, 0.16, 0.3, 'sawtooth', 0.10); }
     if (jenis === 'lewat')   { nada(440, 0, 0.12, 'sine', 0.12); nada(330, 0.12, 0.2, 'sine', 0.12); }
@@ -859,6 +984,7 @@ ENGINE_JS = """
     if (jenis === 'selesai') {
       [523, 659, 784, 1047, 784, 1047, 1319].forEach(function(f, i) { nada(f, i * 0.12, 0.3, 'triangle', 0.18); });
       W.setTimeout(function() { W.__rfSfx('foto'); }, 6000);
+      W.setTimeout(function() { W.__rfSfx('sirine'); }, 10000);
     }
   };
 
@@ -931,12 +1057,36 @@ ENGINE_JS = """
     W.__rfToast(on ? '🪩 Mode Disko ON! Klik judul 3× lagi untuk mematikan' : 'Mode Disko OFF');
   };
 
+  // ── Karakter pixel bisa diklik: lompat + dialog
+  var DIALOG = ['Aduh susahnya...', 'Hmm, hewan apa ya?', 'Buka petunjuk dong!', 'Aku pasti bisa!',
+                'Perutku lapar...', 'Ayo semangat!', 'Kakiku pegal...', 'Hampir ketemu!', 'La la la ~'];
+  var PIKSEL = ['♥', '★', '?!', '♪', '!!', '✦'];
+  W.__rfPelari = function(pel) {
+    var adg = pel.closest('.adegan'); if (!adg) return;
+    pel.classList.remove('lompat'); void pel.offsetWidth; pel.classList.add('lompat');
+    W.setTimeout(function() { pel.classList.remove('lompat'); }, 700);
+    var lama = adg.querySelector('.gelembung'); if (lama && lama.parentNode) lama.parentNode.removeChild(lama);
+    var g = D.createElement('div'); g.className = 'gelembung';
+    g.textContent = DIALOG[Math.floor(Math.random() * DIALOG.length)];
+    adg.appendChild(g);
+    g.style.left = Math.max(6, Math.min(pel.offsetLeft - 10, adg.clientWidth - g.offsetWidth - 6)) + 'px';
+    var p = D.createElement('div'); p.className = 'piksel-emo';
+    p.textContent = PIKSEL[Math.floor(Math.random() * PIKSEL.length)];
+    p.style.left = (pel.offsetLeft + 18) + 'px';
+    adg.appendChild(p);
+    W.setTimeout(function() { if (g.parentNode) g.parentNode.removeChild(g); }, 2200);
+    W.setTimeout(function() { if (p.parentNode) p.parentNode.removeChild(p); }, 1300);
+    W.__rfSfx('lompat');
+  };
+
   // ── Klik global: suara klik di tombol + hitung 3 klik berturut-turut pada judul museum
   var hitung = 0, terakhir = 0;
   if (W.__rfClickH) D.removeEventListener('click', W.__rfClickH, true);
   W.__rfClickH = function(e) {
     var t = e.target;
     if (!t || !t.closest) return;
+    var pel = t.closest('.pelari');
+    if (pel && W.__rfPelari) W.__rfPelari(pel);
     var btn = t.closest('button');
     if (btn && btn.id !== 'rf-musik' && W.__rfSfx) W.__rfSfx('klik');
     if (t.closest('.judul-museum')) {
@@ -1063,9 +1213,12 @@ def adegan(kunci: str, hewan=None, mode: str = "polos", pengikut=()) -> str:
     tambahan = pengikut_html(list(pengikut), baru=(mode == "tangkap")) if pengikut else ""
     if hewan:
         tambahan += f'<div class="hewan"><span>{hewan_svg(hewan, 48)}</span></div>'
+        tambahan += rintangan_html()
         if mode != "kabur":
             tambahan += (f'<div class="lempar"><div class="ly"><div class="lr">{pokeball_svg(info["bola"], 20)}</div></div></div>'
-                         '<div class="kilau">✨</div>')
+                         + ('<div class="kilau">✨</div>' if mode == "tangkap" else ""))
+        if mode == "loop":
+            tambahan += '<div class="miss">MELESET!</div>'
         if mode == "tangkap":
             tambahan += '<div class="tag">✨ Tertangkap!</div>'
         if mode == "kabur":
@@ -1155,6 +1308,47 @@ def adegan_ending(kunci: str, tertangkap) -> str:
             <div class="baris depan">{kiri}<div class="slot kar">{penjelajah}</div>{kanan}</div>
             <div class="bingkai" style="animation-delay:{jeda_foto:.1f}s"></div>
             <div class="flash-foto" style="animation-delay:{jeda_foto:.1f}s"></div>
+        </div>
+    """)
+
+
+def rintangan_html() -> str:
+    """Batang kayu & batu di jalur lemparan: Pokéball hanya bisa menembus kalau jawabannya benar."""
+    return rapat(
+        f'<div class="rintangan log" style="left:54%">{grid_svg(GRID_BATANG, PALET_BATANG, 44)}</div>'
+        f'<div class="rintangan" style="left:63%">{grid_svg(GRID_BATU, PALET_BATU, 32)}</div>'
+    )
+
+
+def adegan_api() -> str:
+    """Ending tambahan (muncul setelah foto bersama): pembakar hutan dicegah petugas."""
+    def orang(pal):
+        return (f'<div class="org-b">{sprite_svg("red", 52, 0, "k1", pal)}'
+                f'{sprite_svg("red", 52, 1, "k2", pal)}</div>')
+
+    api = "".join(
+        f'<div class="api-api" style="left:{x}%"><div class="api-b">{grid_svg(GRID_API, PALET_API, 34)}</div></div>'
+        for x in (50, 58, 66)
+    )
+    return rapat(f"""
+        <div class="adegan api">
+            <div class="bulan"></div>
+            <div class="lapis jauh"></div>
+            <div class="lapis dekat"></div>
+            <div class="tanah"></div>
+            <div class="merah"></div>
+            <div class="cap capA">🔥 Awas! Ada yang mencoba membakar hutan…</div>
+            <div class="cap capB">🚨 Petugas tiba! Api dipadamkan, pelaku dicegah!</div>
+            <div class="cap capC">🌲 Hutan aman berkat penjaga alam!</div>
+            {api}
+            <div class="pemadam org">{orang(PAL_PEMADAM)}</div>
+            <div class="semprot"></div>
+            <div class="polisi org">{orang(PAL_POLISI)}</div>
+            <div class="pembakar">
+                {orang(PAL_PEMBAKAR)}
+                <div class="obor">{grid_svg(GRID_API, PALET_API, 16)}<i class="gagang"></i></div>
+                <div class="balon">Ampun!</div>
+            </div>
         </div>
     """)
 
@@ -1466,6 +1660,8 @@ else:
 
     # Scene ending: pelepasan satwa → foto bersama (hanya hewan yang tertangkap)
     st.markdown(adegan_ending(kunci, tangkapan), unsafe_allow_html=True)
+    # Ending tambahan: ancaman kebakaran hutan (muncul setelah foto bersama)
+    st.markdown(adegan_api(), unsafe_allow_html=True)
 
     rincian = (f"<div style='opacity:0.8; font-size:0.85rem;'>🐾 {len(tangkapan)} / {TOTAL_SOAL} satwa tertangkap"
                + (f" · {skor} poin soal + {bonus} bonus 🐹" if bonus else "") + "</div>")
